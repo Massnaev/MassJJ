@@ -1,0 +1,22 @@
+.dart_tool/
+.idea/
+.metadata
+.packages
+.tooling/
+build/
+coverage/
+server/data/
+*.iml
+
+# Generated platform state
+android/.gradle/
+android/local.properties
+ios/Flutter/ephemeral/
+windows/flutter/ephemeral/
+
+# Secrets and local configuration
+.env
+*.jks
+*.keystore
+*.p12
+*.mobileprovision

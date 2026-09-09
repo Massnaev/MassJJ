@@ -1,0 +1,23 @@
+name: p2p_messenger
+description: Anonymous, transport-agnostic P2P messenger MVP.
+publish_to: "none"
+version: 0.1.0+1
+
+environment:
+  sdk: ">=3.10.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cryptography: ^2.9.0
+  flutter_secure_storage: ^11.0.0
+  shared_preferences: ^2.5.5
+  uuid: ^4.6.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
