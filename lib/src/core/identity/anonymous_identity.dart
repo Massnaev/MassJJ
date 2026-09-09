@@ -46,12 +46,12 @@ class Contact {
   final String inboxWriteToken;
 
   Map<String, Object?> toJson() => {
-        'userId': userId,
-        'displayName': displayName,
-        'publicKey': base64UrlEncode(publicKey),
-        'fingerprint': fingerprint,
-        'inboxWriteToken': inboxWriteToken,
-      };
+    'userId': userId,
+    'displayName': displayName,
+    'publicKey': base64UrlEncode(publicKey),
+    'fingerprint': fingerprint,
+    'inboxWriteToken': inboxWriteToken,
+  };
 
   factory Contact.fromJson(Map<String, Object?> json) {
     return Contact(

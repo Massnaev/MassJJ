@@ -42,25 +42,28 @@ void main() {
     expect(outbox.sendCount, 0);
   });
 
-  test('router falls back when a preferred transport fails during send', () async {
-    final relay = _FakeTransport(
-      kind: TransportKind.internetRelay,
-      priority: 20,
-      reachable: true,
-      failOnSend: true,
-    );
-    final outbox = _FakeTransport(
-      kind: TransportKind.localOutbox,
-      priority: 1000,
-      reachable: true,
-    );
+  test(
+    'router falls back when a preferred transport fails during send',
+    () async {
+      final relay = _FakeTransport(
+        kind: TransportKind.internetRelay,
+        priority: 20,
+        reachable: true,
+        failOnSend: true,
+      );
+      final outbox = _FakeTransport(
+        kind: TransportKind.localOutbox,
+        priority: 1000,
+        reachable: true,
+      );
 
-    final receipt = await TransportRouter([outbox, relay]).send(packet);
+      final receipt = await TransportRouter([outbox, relay]).send(packet);
 
-    expect(receipt.transport, TransportKind.localOutbox);
-    expect(relay.sendCount, 1);
-    expect(outbox.sendCount, 1);
-  });
+      expect(receipt.transport, TransportKind.localOutbox);
+      expect(relay.sendCount, 1);
+      expect(outbox.sendCount, 1);
+    },
+  );
 }
 
 class _FakeTransport implements DeliveryTransport {
@@ -91,9 +94,6 @@ class _FakeTransport implements DeliveryTransport {
   Future<DeliveryReceipt> send(EncryptedPacket packet) async {
     sendCount++;
     if (failOnSend) throw StateError('transport failed');
-    return DeliveryReceipt(
-      transport: kind,
-      messageStatus: MessageStatus.sent,
-    );
+    return DeliveryReceipt(transport: kind, messageStatus: MessageStatus.sent);
   }
 }

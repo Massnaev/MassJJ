@@ -19,11 +19,11 @@ class AppController extends ChangeNotifier {
     required CryptoEngine cryptoEngine,
     required TransportRouter transportRouter,
     required String relayUrl,
-  })  : _identityService = identityService,
-        _messageRepository = messageRepository,
-        _cryptoEngine = cryptoEngine,
-        _transportRouter = transportRouter,
-        _relayUrl = relayUrl;
+  }) : _identityService = identityService,
+       _messageRepository = messageRepository,
+       _cryptoEngine = cryptoEngine,
+       _transportRouter = transportRouter,
+       _relayUrl = relayUrl;
 
   final IdentityService _identityService;
   final MessageRepository _messageRepository;
@@ -203,9 +203,7 @@ class AppController extends ChangeNotifier {
         recipient: contact,
       );
       final receipt = await _transportRouter.send(packet);
-      _replaceMessage(
-        message.copyWith(status: receipt.messageStatus),
-      );
+      _replaceMessage(message.copyWith(status: receipt.messageStatus));
     } catch (_) {
       _replaceMessage(message.copyWith(status: MessageStatus.failed));
       rethrow;

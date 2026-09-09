@@ -18,9 +18,7 @@ Future<void> main() async {
     identityService: IdentityService(vault),
     messageRepository: messages,
     cryptoEngine: MvpCryptoEngine(),
-    transportRouter: TransportRouter([
-      LocalOutboxTransport(messages),
-    ]),
+    transportRouter: TransportRouter([LocalOutboxTransport(messages)]),
     relayUrl: const String.fromEnvironment('RELAY_URL'),
   );
 

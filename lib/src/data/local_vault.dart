@@ -9,8 +9,8 @@ class LocalVault {
   LocalVault({
     FlutterSecureStorage? secureStorage,
     SharedPreferencesAsync? preferences,
-  })  : _secureStorage = secureStorage ?? const FlutterSecureStorage(),
-        _preferences = preferences ?? SharedPreferencesAsync();
+  }) : _secureStorage = secureStorage ?? const FlutterSecureStorage(),
+       _preferences = preferences ?? SharedPreferencesAsync();
 
   static const _masterKeyName = 'p2p.local-vault.master-key.v1';
   static const _valuePrefix = 'p2p.vault.';

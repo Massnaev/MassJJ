@@ -41,7 +41,10 @@ class _ChatScreenState extends State<ChatScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(widget.contact.displayName),
-                const Text('E2EE · ожидает транспорт', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w400)),
+                const Text(
+                  'E2EE · ожидает транспорт',
+                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w400),
+                ),
               ],
             ),
           ),
@@ -53,10 +56,15 @@ class _ChatScreenState extends State<ChatScreen> {
                       ? const _ChatEmpty()
                       : ListView.builder(
                           reverse: true,
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 20,
+                          ),
                           itemCount: messages.length,
                           itemBuilder: (context, index) {
-                            return _MessageBubble(message: messages[messages.length - index - 1]);
+                            return _MessageBubble(
+                              message: messages[messages.length - index - 1],
+                            );
                           },
                         ),
                 ),
@@ -104,7 +112,10 @@ class _ChatEmpty extends StatelessWidget {
           children: [
             Icon(Icons.lock_outline, size: 44),
             SizedBox(height: 12),
-            Text('Сообщения шифруются до помещения в очередь.', textAlign: TextAlign.center),
+            Text(
+              'Сообщения шифруются до помещения в очередь.',
+              textAlign: TextAlign.center,
+            ),
           ],
         ),
       ),
@@ -128,7 +139,9 @@ class _MessageBubble extends StatelessWidget {
         margin: const EdgeInsets.only(bottom: 10),
         padding: const EdgeInsets.fromLTRB(15, 11, 15, 9),
         decoration: BoxDecoration(
-          color: outgoing ? colorScheme.primaryContainer : colorScheme.surfaceContainerHighest,
+          color: outgoing
+              ? colorScheme.primaryContainer
+              : colorScheme.surfaceContainerHighest,
           borderRadius: BorderRadius.only(
             topLeft: const Radius.circular(18),
             topRight: const Radius.circular(18),
@@ -152,12 +165,12 @@ class _MessageBubble extends StatelessWidget {
   }
 
   String _statusLabel(MessageStatus status) => switch (status) {
-        MessageStatus.encrypting => 'Шифруется…',
-        MessageStatus.queued => 'Зашифровано · в очереди',
-        MessageStatus.sent => 'Отправлено',
-        MessageStatus.delivered => 'Доставлено',
-        MessageStatus.failed => 'Ошибка',
-      };
+    MessageStatus.encrypting => 'Шифруется…',
+    MessageStatus.queued => 'Зашифровано · в очереди',
+    MessageStatus.sent => 'Отправлено',
+    MessageStatus.delivered => 'Доставлено',
+    MessageStatus.failed => 'Ошибка',
+  };
 }
 
 class _Composer extends StatelessWidget {
@@ -192,7 +205,10 @@ class _Composer extends StatelessWidget {
                 textInputAction: TextInputAction.newline,
                 decoration: const InputDecoration(
                   hintText: 'Сообщение',
-                  contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  contentPadding: EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
                 ),
               ),
             ),

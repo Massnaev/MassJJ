@@ -22,12 +22,12 @@ An independently runnable opaque relay with capability-separated mailbox access
 lives in [`server/`](server/). It uses only Node.js built-ins and has integration
 tests, so no `npm install` is needed.
 
-## Bootstrap platform projects
+## Development setup
 
-Flutter is not committed to this repository. With Flutter 3.44 or newer on PATH:
+Android, iOS, and Windows platform projects are committed. With Flutter 3.47 or
+newer on PATH:
 
 ```powershell
-flutter create --platforms=android,ios,windows --project-name p2p_messenger --org app.p2pmessenger .
 flutter pub get
 flutter analyze
 flutter test

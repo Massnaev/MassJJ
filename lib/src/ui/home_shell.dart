@@ -3,7 +3,6 @@ import 'package:flutter/services.dart';
 
 import '../app_controller.dart';
 import '../core/identity/anonymous_identity.dart';
-import '../core/messaging/chat_message.dart';
 import 'chat_screen.dart';
 
 class HomeShell extends StatefulWidget {
@@ -35,14 +34,8 @@ class _HomeShellState extends State<HomeShell> {
             final body = IndexedStack(
               index: _selectedIndex,
               children: [
-                _ChatsPage(
-                  controller: widget.controller,
-                  onOpen: _openChat,
-                ),
-                _ContactsPage(
-                  controller: widget.controller,
-                  onOpen: _openChat,
-                ),
+                _ChatsPage(controller: widget.controller, onOpen: _openChat),
+                _ContactsPage(controller: widget.controller, onOpen: _openChat),
                 _ProfilePage(controller: widget.controller),
               ],
             );
@@ -53,7 +46,8 @@ class _HomeShellState extends State<HomeShell> {
                 bottomNavigationBar: NavigationBar(
                   selectedIndex: _selectedIndex,
                   destinations: _destinations,
-                  onDestinationSelected: (value) => setState(() => _selectedIndex = value),
+                  onDestinationSelected: (value) =>
+                      setState(() => _selectedIndex = value),
                 ),
               );
             }
@@ -95,14 +89,19 @@ class _HomeShellState extends State<HomeShell> {
   void _openChat(Contact contact) {
     Navigator.of(context).push(
       MaterialPageRoute<void>(
-        builder: (_) => ChatScreen(controller: widget.controller, contact: contact),
+        builder: (_) =>
+            ChatScreen(controller: widget.controller, contact: contact),
       ),
     );
   }
 }
 
 class _PageFrame extends StatelessWidget {
-  const _PageFrame({required this.title, required this.subtitle, required this.child});
+  const _PageFrame({
+    required this.title,
+    required this.subtitle,
+    required this.child,
+  });
 
   final String title;
   final String subtitle;
@@ -126,7 +125,10 @@ class _PageFrame extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(title, style: Theme.of(context).textTheme.headlineLarge),
+                        Text(
+                          title,
+                          style: Theme.of(context).textTheme.headlineLarge,
+                        ),
                         const SizedBox(height: 4),
                         Text(subtitle),
                       ],
@@ -164,11 +166,12 @@ class _ChatsPage extends StatelessWidget {
                 ? const _EmptyState(
                     icon: Icons.person_add_alt_1_outlined,
                     title: 'Добавьте первый контакт',
-                    body: 'Откройте вкладку «Контакты» и вставьте код приглашения с другого устройства.',
+                    body:
+                        'Откройте вкладку «Контакты» и вставьте код приглашения с другого устройства.',
                   )
                 : ListView.separated(
                     itemCount: controller.contacts.length,
-                    separatorBuilder: (_, __) => const SizedBox(height: 10),
+                    separatorBuilder: (_, _) => const SizedBox(height: 10),
                     itemBuilder: (context, index) {
                       final contact = controller.contacts[index];
                       final last = controller.lastMessageFor(contact.userId);
@@ -211,11 +214,12 @@ class _ContactsPage extends StatelessWidget {
                 ? const _EmptyState(
                     icon: Icons.qr_code_2,
                     title: 'Контактов пока нет',
-                    body: 'В MVP используется текстовый код. Сканирование QR появится следующим этапом.',
+                    body:
+                        'В MVP используется текстовый код. Сканирование QR появится следующим этапом.',
                   )
                 : ListView.separated(
                     itemCount: controller.contacts.length,
-                    separatorBuilder: (_, __) => const SizedBox(height: 10),
+                    separatorBuilder: (_, _) => const SizedBox(height: 10),
                     itemBuilder: (context, index) {
                       final contact = controller.contacts[index];
                       return _ContactTile(
@@ -245,10 +249,7 @@ class _ContactsPage extends StatelessWidget {
               controller: textController,
               minLines: 3,
               maxLines: 6,
-              decoration: InputDecoration(
-                hintText: 'p2p1.…',
-                errorText: error,
-              ),
+              decoration: InputDecoration(hintText: 'p2p1.…', errorText: error),
             ),
           ),
           actions: [
@@ -259,7 +260,9 @@ class _ContactsPage extends StatelessWidget {
             FilledButton(
               onPressed: () async {
                 try {
-                  final contact = await controller.addContact(textController.text);
+                  final contact = await controller.addContact(
+                    textController.text,
+                  );
                   if (!dialogContext.mounted) return;
                   Navigator.pop(dialogContext);
                   onOpen(contact);
@@ -303,15 +306,24 @@ class _ProfilePageState extends State<_ProfilePage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(identity.displayName, style: Theme.of(context).textTheme.headlineSmall),
+                  Text(
+                    identity.displayName,
+                    style: Theme.of(context).textTheme.headlineSmall,
+                  ),
                   const SizedBox(height: 18),
                   const Text('ID устройства'),
                   const SizedBox(height: 4),
-                  SelectableText(identity.userId, style: const TextStyle(fontFamily: 'monospace')),
+                  SelectableText(
+                    identity.userId,
+                    style: const TextStyle(fontFamily: 'monospace'),
+                  ),
                   const SizedBox(height: 14),
                   const Text('Отпечаток ключа'),
                   const SizedBox(height: 4),
-                  SelectableText(identity.fingerprint, style: const TextStyle(fontFamily: 'monospace')),
+                  SelectableText(
+                    identity.fingerprint,
+                    style: const TextStyle(fontFamily: 'monospace'),
+                  ),
                 ],
               ),
             ),
@@ -323,7 +335,10 @@ class _ProfilePageState extends State<_ProfilePage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Text('Код приглашения', style: Theme.of(context).textTheme.titleMedium),
+                  Text(
+                    'Код приглашения',
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
                   const SizedBox(height: 8),
                   Text(
                     widget.controller.inviteCode,
@@ -333,7 +348,11 @@ class _ProfilePageState extends State<_ProfilePage> {
                   ),
                   const SizedBox(height: 12),
                   OutlinedButton.icon(
-                    onPressed: () => _copy(context, widget.controller.inviteCode, 'Код приглашения скопирован'),
+                    onPressed: () => _copy(
+                      context,
+                      widget.controller.inviteCode,
+                      'Код приглашения скопирован',
+                    ),
                     icon: const Icon(Icons.copy_outlined),
                     label: const Text('Копировать код'),
                   ),
@@ -353,20 +372,29 @@ class _ProfilePageState extends State<_ProfilePage> {
                       const Icon(Icons.warning_amber_rounded),
                       const SizedBox(width: 10),
                       Expanded(
-                        child: Text('Код восстановления', style: Theme.of(context).textTheme.titleMedium),
+                        child: Text(
+                          'Код восстановления',
+                          style: Theme.of(context).textTheme.titleMedium,
+                        ),
                       ),
                     ],
                   ),
                   const SizedBox(height: 8),
-                  const Text('Любой, кто получит этот код, сможет восстановить вашу личность.'),
+                  const Text(
+                    'Любой, кто получит этот код, сможет восстановить вашу личность.',
+                  ),
                   const SizedBox(height: 12),
                   if (_showRecovery)
-                    SelectableText(identity.recoveryCode, style: const TextStyle(fontFamily: 'monospace'))
+                    SelectableText(
+                      identity.recoveryCode,
+                      style: const TextStyle(fontFamily: 'monospace'),
+                    )
                   else
                     const Text('•••• •••• •••• ••••'),
                   const SizedBox(height: 12),
                   OutlinedButton(
-                    onPressed: () => setState(() => _showRecovery = !_showRecovery),
+                    onPressed: () =>
+                        setState(() => _showRecovery = !_showRecovery),
                     child: Text(_showRecovery ? 'Скрыть' : 'Показать'),
                   ),
                   if (_showRecovery) ...[
@@ -390,10 +418,16 @@ class _ProfilePageState extends State<_ProfilePage> {
     );
   }
 
-  Future<void> _copy(BuildContext context, String text, String confirmation) async {
+  Future<void> _copy(
+    BuildContext context,
+    String text,
+    String confirmation,
+  ) async {
     await Clipboard.setData(ClipboardData(text: text));
     if (!context.mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(confirmation)));
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(confirmation)));
   }
 }
 
@@ -407,12 +441,14 @@ class _TransportBanner extends StatelessWidget {
     final color = controller.relayReady
         ? const Color(0xFF3F8061)
         : const Color(0xFFD58B36);
-    final title = controller.relayReady ? 'Relay подключён' : 'Локальная очередь';
+    final title = controller.relayReady
+        ? 'Relay подключён'
+        : 'Локальная очередь';
     final subtitle = controller.relayReady
         ? 'Зашифрованные пакеты отправляются и принимаются.'
         : controller.relayConfigured
-            ? 'Relay недоступен; сообщения дождутся подключения.'
-            : 'Пакеты шифруются и ждут настройки RELAY_URL.';
+        ? 'Relay недоступен; сообщения дождутся подключения.'
+        : 'Пакеты шифруются и ждут настройки RELAY_URL.';
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -428,7 +464,10 @@ class _TransportBanner extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(title, style: const TextStyle(fontWeight: FontWeight.w700)),
+                  Text(
+                    title,
+                    style: const TextStyle(fontWeight: FontWeight.w700),
+                  ),
                   Text(subtitle),
                 ],
               ),
@@ -470,7 +509,11 @@ class _ContactTile extends StatelessWidget {
 }
 
 class _EmptyState extends StatelessWidget {
-  const _EmptyState({required this.icon, required this.title, required this.body});
+  const _EmptyState({
+    required this.icon,
+    required this.title,
+    required this.body,
+  });
 
   final IconData icon;
   final String title;
@@ -486,7 +529,11 @@ class _EmptyState extends StatelessWidget {
           children: [
             Icon(icon, size: 48, color: Theme.of(context).colorScheme.primary),
             const SizedBox(height: 16),
-            Text(title, style: Theme.of(context).textTheme.headlineSmall, textAlign: TextAlign.center),
+            Text(
+              title,
+              style: Theme.of(context).textTheme.headlineSmall,
+              textAlign: TextAlign.center,
+            ),
             const SizedBox(height: 8),
             Text(body, textAlign: TextAlign.center),
           ],
@@ -508,7 +555,10 @@ class _Mark extends StatelessWidget {
         color: Theme.of(context).colorScheme.primary,
         borderRadius: BorderRadius.circular(13),
       ),
-      child: Icon(Icons.hub_outlined, color: Theme.of(context).colorScheme.onPrimary),
+      child: Icon(
+        Icons.hub_outlined,
+        color: Theme.of(context).colorScheme.onPrimary,
+      ),
     );
   }
 }

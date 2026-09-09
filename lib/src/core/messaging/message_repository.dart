@@ -42,7 +42,8 @@ class MessageRepository {
         ? <Object?>[]
         : List<Object?>.from(data['items']! as List<dynamic>);
     items.removeWhere(
-      (item) => (item! as Map<String, dynamic>)['messageId'] == packet.messageId,
+      (item) =>
+          (item! as Map<String, dynamic>)['messageId'] == packet.messageId,
     );
     items.add(packet.toJson());
     await _vault.writeJson('outbox.v1', {'items': items});

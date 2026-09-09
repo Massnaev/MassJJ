@@ -3,7 +3,8 @@ import 'delivery_transport.dart';
 
 class TransportRouter {
   TransportRouter(List<DeliveryTransport> transports)
-      : _transports = [...transports]..sort((a, b) => a.priority.compareTo(b.priority));
+    : _transports = [...transports]
+        ..sort((a, b) => a.priority.compareTo(b.priority));
 
   final List<DeliveryTransport> _transports;
 

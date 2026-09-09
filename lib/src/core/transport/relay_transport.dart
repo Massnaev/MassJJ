@@ -14,10 +14,10 @@ class RelayTransport implements DeliveryTransport {
     required AnonymousIdentity identity,
     required ContactLookup findContact,
     HttpClient? client,
-  })  : _baseUri = baseUri,
-        _identity = identity,
-        _findContact = findContact,
-        _client = client ?? HttpClient();
+  }) : _baseUri = baseUri,
+       _identity = identity,
+       _findContact = findContact,
+       _client = client ?? HttpClient();
 
   final Uri _baseUri;
   final AnonymousIdentity _identity;
@@ -46,7 +46,9 @@ class RelayTransport implements DeliveryTransport {
         },
       );
       if (response.statusCode != 200 && response.statusCode != 201) {
-        throw HttpException('Relay registration failed: ${response.statusCode}');
+        throw HttpException(
+          'Relay registration failed: ${response.statusCode}',
+        );
       }
       _state = TransportState.ready;
     } catch (_) {
@@ -67,7 +69,8 @@ class RelayTransport implements DeliveryTransport {
     try {
       final response = await _jsonRequest(
         method: 'POST',
-        path: '/v1/mailboxes/${Uri.encodeComponent(packet.recipientId)}/messages',
+        path:
+            '/v1/mailboxes/${Uri.encodeComponent(packet.recipientId)}/messages',
         bearerToken: contact.inboxWriteToken,
         body: packet.toJson(),
       );
@@ -88,7 +91,8 @@ class RelayTransport implements DeliveryTransport {
   Future<List<EncryptedPacket>> receive() async {
     final response = await _jsonRequest(
       method: 'GET',
-      path: '/v1/mailboxes/${Uri.encodeComponent(_identity.userId)}/messages?limit=100',
+      path:
+          '/v1/mailboxes/${Uri.encodeComponent(_identity.userId)}/messages?limit=100',
       bearerToken: _identity.inboxReadToken,
     );
     if (response.statusCode != 200) {
@@ -105,11 +109,14 @@ class RelayTransport implements DeliveryTransport {
   Future<void> acknowledge(String messageId) async {
     final response = await _jsonRequest(
       method: 'DELETE',
-      path: '/v1/mailboxes/${Uri.encodeComponent(_identity.userId)}/messages/${Uri.encodeComponent(messageId)}',
+      path:
+          '/v1/mailboxes/${Uri.encodeComponent(_identity.userId)}/messages/${Uri.encodeComponent(messageId)}',
       bearerToken: _identity.inboxReadToken,
     );
     if (response.statusCode != 204) {
-      throw HttpException('Relay acknowledgement failed: ${response.statusCode}');
+      throw HttpException(
+        'Relay acknowledgement failed: ${response.statusCode}',
+      );
     }
   }
 
@@ -122,7 +129,10 @@ class RelayTransport implements DeliveryTransport {
     final request = await _client.openUrl(method, _baseUri.resolve(path));
     request.headers.set(HttpHeaders.acceptHeader, 'application/json');
     if (bearerToken != null) {
-      request.headers.set(HttpHeaders.authorizationHeader, 'Bearer $bearerToken');
+      request.headers.set(
+        HttpHeaders.authorizationHeader,
+        'Bearer $bearerToken',
+      );
     }
     if (body != null) {
       request.headers.contentType = ContentType.json;

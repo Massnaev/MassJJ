@@ -25,7 +25,9 @@ class IdentityService {
     final keyPair = await _x25519.newKeyPairFromSeed(seed);
     final publicKey = await keyPair.extractPublicKey();
     final digest = await _sha256.hash(publicKey.bytes);
-    final id = base64UrlEncode(digest.bytes.take(16).toList()).replaceAll('=', '');
+    final id = base64UrlEncode(
+      digest.bytes.take(16).toList(),
+    ).replaceAll('=', '');
     final identity = AnonymousIdentity(
       userId: id,
       displayName: 'Аноним ${id.substring(0, 5)}',
@@ -58,9 +60,13 @@ class IdentityService {
     }
 
     try {
-      final data = jsonDecode(
-        utf8.decode(base64Url.decode(base64Url.normalize(code.substring(5)))),
-      ) as Map<String, dynamic>;
+      final data =
+          jsonDecode(
+                utf8.decode(
+                  base64Url.decode(base64Url.normalize(code.substring(5))),
+                ),
+              )
+              as Map<String, dynamic>;
       final publicKey = base64Url.decode(data['key'] as String);
       final writeToken = data['write'] as String;
       final displayName = data['name'] as String;
@@ -72,9 +78,13 @@ class IdentityService {
         throw const FormatException('Неподдерживаемый код контакта.');
       }
       final digest = await _sha256.hash(publicKey);
-      final expectedId = base64UrlEncode(digest.bytes.take(16).toList()).replaceAll('=', '');
+      final expectedId = base64UrlEncode(
+        digest.bytes.take(16).toList(),
+      ).replaceAll('=', '');
       if (data['id'] != expectedId) {
-        throw const FormatException('ID контакта не соответствует публичному ключу.');
+        throw const FormatException(
+          'ID контакта не соответствует публичному ключу.',
+        );
       }
       return Contact(
         userId: expectedId,
@@ -103,14 +113,14 @@ class IdentityService {
   }
 
   Map<String, Object?> _identityToJson(AnonymousIdentity identity) => {
-        'userId': identity.userId,
-        'displayName': identity.displayName,
-        'publicKey': base64UrlEncode(identity.publicKey),
-        'privateSeed': base64UrlEncode(identity.privateSeed),
-        'fingerprint': identity.fingerprint,
-        'inboxReadToken': identity.inboxReadToken,
-        'inboxWriteToken': identity.inboxWriteToken,
-      };
+    'userId': identity.userId,
+    'displayName': identity.displayName,
+    'publicKey': base64UrlEncode(identity.publicKey),
+    'privateSeed': base64UrlEncode(identity.privateSeed),
+    'fingerprint': identity.fingerprint,
+    'inboxReadToken': identity.inboxReadToken,
+    'inboxWriteToken': identity.inboxWriteToken,
+  };
 
   String _randomToken() {
     final random = Random.secure();
@@ -119,7 +129,9 @@ class IdentityService {
   }
 
   String _formatFingerprint(List<int> bytes) {
-    final hex = bytes.map((byte) => byte.toRadixString(16).padLeft(2, '0')).join();
+    final hex = bytes
+        .map((byte) => byte.toRadixString(16).padLeft(2, '0'))
+        .join();
     return [for (var i = 0; i < 32; i += 4) hex.substring(i, i + 4)].join(' ');
   }
 }

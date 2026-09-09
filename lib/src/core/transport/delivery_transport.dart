@@ -6,10 +6,7 @@ enum TransportKind { internetRelay, nearby, localOutbox }
 enum TransportState { unavailable, ready, degraded }
 
 class DeliveryReceipt {
-  const DeliveryReceipt({
-    required this.transport,
-    required this.messageStatus,
-  });
+  const DeliveryReceipt({required this.transport, required this.messageStatus});
 
   final TransportKind transport;
   final MessageStatus messageStatus;

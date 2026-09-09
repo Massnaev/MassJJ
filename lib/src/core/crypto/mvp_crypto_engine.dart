@@ -14,7 +14,7 @@ import 'crypto_engine.dart';
 class MvpCryptoEngine implements CryptoEngine {
   final X25519 _keyAgreement = X25519();
   final Cipher _cipher = AesGcm.with256bits();
-  final KdfAlgorithm _kdf = Hkdf(hmac: Hmac.sha256(), outputLength: 32);
+  final Hkdf _kdf = Hkdf(hmac: Hmac.sha256(), outputLength: 32);
 
   @override
   Future<EncryptedPacket> encrypt({

@@ -25,17 +25,17 @@ class EncryptedPacket {
   final List<int> mac;
 
   Map<String, Object?> toJson() => {
-        'v': protocolVersion,
-        'messageId': messageId,
-        'senderId': senderId,
-        'recipientId': recipientId,
-        'createdAt': createdAt.toIso8601String(),
-        'expiresAt': expiresAt.toIso8601String(),
-        'hopLimit': hopLimit,
-        'nonce': base64Encode(nonce),
-        'cipherText': base64Encode(cipherText),
-        'mac': base64Encode(mac),
-      };
+    'v': protocolVersion,
+    'messageId': messageId,
+    'senderId': senderId,
+    'recipientId': recipientId,
+    'createdAt': createdAt.toIso8601String(),
+    'expiresAt': expiresAt.toIso8601String(),
+    'hopLimit': hopLimit,
+    'nonce': base64Encode(nonce),
+    'cipherText': base64Encode(cipherText),
+    'mac': base64Encode(mac),
+  };
 
   factory EncryptedPacket.fromJson(Map<String, Object?> json) {
     if (json['v'] != protocolVersion) {
