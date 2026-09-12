@@ -7,6 +7,9 @@
   Windows secure-storage implementation;
 - message bodies are authenticated and encrypted before entering the outbox;
 - invitation and packet parsers validate protocol versions and key sizes.
+- invitation QR codes contain the same public invitation bundle as `p2p1.…`:
+  public key, display name, fingerprint, and write-only mailbox capability. They
+  never contain the private seed, read capability, or recovery code.
 
 ## What is deliberately not production-ready
 
@@ -15,6 +18,11 @@ AES-GCM uses a fresh random nonce, but the scheme has no Double Ratchet, forward
 secrecy, post-compromise security, prekeys, multi-device session management, or
 formal protocol audit. It must be replaced with an audited Signal-compatible
 PQXDH/Double Ratchet core before any production deployment.
+
+The packet envelope now reserves `cryptoSuite` and `cryptoHeader` fields for
+that migration. This is only protocol plumbing; it does not add forward secrecy
+to the MVP. The staged replacement plan is documented in
+[`RATCHET_MIGRATION.md`](RATCHET_MIGRATION.md).
 
 The recovery code is a URL-safe bundle containing identity seed and mailbox
 capabilities. Word-list encoding, checksum, secure import, and key rotation still

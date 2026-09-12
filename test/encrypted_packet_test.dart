@@ -5,6 +5,8 @@ void main() {
   test('encrypted packet survives JSON round-trip', () {
     final createdAt = DateTime.utc(2026, 9, 9, 12, 30);
     final original = EncryptedPacket(
+      cryptoSuite: 'test-ratchet-v1',
+      cryptoHeader: const {'n': 7, 'pn': 3},
       messageId: 'message-1',
       senderId: 'alice',
       recipientId: 'bob',
@@ -19,6 +21,8 @@ void main() {
     final decoded = EncryptedPacket.fromJson(original.toJson());
 
     expect(decoded.messageId, original.messageId);
+    expect(decoded.cryptoSuite, original.cryptoSuite);
+    expect(decoded.cryptoHeader, original.cryptoHeader);
     expect(decoded.senderId, original.senderId);
     expect(decoded.recipientId, original.recipientId);
     expect(decoded.createdAt, original.createdAt);

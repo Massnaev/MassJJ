@@ -42,6 +42,7 @@ class AppController extends ChangeNotifier {
 
   bool get relayConfigured => _relayUrl.isNotEmpty;
   bool get relayReady => _relayTransport?.state == TransportState.ready;
+  CryptoEngineInfo get cryptoInfo => _cryptoEngine.info;
 
   Future<void> initialize() async {
     identity = await _identityService.load();

@@ -2,6 +2,8 @@ import 'dart:convert';
 
 class EncryptedPacket {
   const EncryptedPacket({
+    this.cryptoSuite = 'mvp-x25519-aesgcm-v1',
+    this.cryptoHeader = const {},
     required this.messageId,
     required this.senderId,
     required this.recipientId,
@@ -14,6 +16,8 @@ class EncryptedPacket {
   });
 
   static const protocolVersion = 1;
+  final String cryptoSuite;
+  final Map<String, Object?> cryptoHeader;
   final String messageId;
   final String senderId;
   final String recipientId;
@@ -26,6 +30,8 @@ class EncryptedPacket {
 
   Map<String, Object?> toJson() => {
     'v': protocolVersion,
+    'cryptoSuite': cryptoSuite,
+    'cryptoHeader': cryptoHeader,
     'messageId': messageId,
     'senderId': senderId,
     'recipientId': recipientId,
@@ -42,6 +48,10 @@ class EncryptedPacket {
       throw const FormatException('Unsupported packet version.');
     }
     return EncryptedPacket(
+      cryptoSuite: json['cryptoSuite'] as String? ?? 'mvp-x25519-aesgcm-v1',
+      cryptoHeader: json['cryptoHeader'] == null
+          ? const {}
+          : Map<String, Object?>.from(json['cryptoHeader']! as Map),
       messageId: json['messageId']! as String,
       senderId: json['senderId']! as String,
       recipientId: json['recipientId']! as String,

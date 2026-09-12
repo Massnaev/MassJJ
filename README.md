@@ -9,16 +9,19 @@ are local identities: no phone number, email address, or password-reset service.
 - first-run flow for creating or restoring an identity, with an explicit backup
   confirmation;
 - copy/paste invitation codes (`p2p1.…`);
+- locally rendered QR invitations with no camera permission required;
 - encrypted local storage backed by the platform secure store;
 - authenticated encrypted message envelopes;
 - persistent local outbox;
 - transport routing boundary for relay, nearby, and DTN delivery;
-- responsive phone/desktop interface in Russian.
+- responsive phone/desktop interface in Russian;
+- explicit in-chat disclosure of the active crypto suite and contact
+  fingerprint.
 
 With `RELAY_URL` configured, the client registers its anonymous mailbox, sends,
 polls, decrypts, and acknowledges packets. Without connectivity it keeps packets
-in the encrypted outbox and retries after the relay recovers. QR scanning and
-Nearby/Bluetooth/Wi-Fi adapters are the next slices.
+in the encrypted outbox and retries after the relay recovers. Camera scanning
+and Nearby/Bluetooth/Wi-Fi adapters are the next slices.
 
 An independently runnable opaque relay with capability-separated mailbox access
 lives in [`server/`](server/). It uses only Node.js built-ins and has integration

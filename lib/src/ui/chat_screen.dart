@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../app_controller.dart';
+import '../core/crypto/crypto_engine.dart';
 import '../core/identity/anonymous_identity.dart';
 import '../core/messaging/chat_message.dart';
 
@@ -20,11 +21,13 @@ class ChatScreen extends StatefulWidget {
 
 class _ChatScreenState extends State<ChatScreen> {
   final _composer = TextEditingController();
+  final _composerFocus = FocusNode();
   bool _sending = false;
 
   @override
   void dispose() {
     _composer.dispose();
+    _composerFocus.dispose();
     super.dispose();
   }
 
@@ -37,39 +40,76 @@ class _ChatScreenState extends State<ChatScreen> {
         return Scaffold(
           appBar: AppBar(
             titleSpacing: 0,
-            title: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            title: Row(
               children: [
-                Text(widget.contact.displayName),
-                const Text(
-                  'E2EE · ожидает транспорт',
-                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w400),
+                CircleAvatar(
+                  radius: 18,
+                  child: Text(
+                    widget.contact.displayName.characters.first.toUpperCase(),
+                  ),
+                ),
+                const SizedBox(width: 11),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        widget.contact.displayName,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      Text(
+                        _connectionLabel(),
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
+            actions: [
+              IconButton(
+                onPressed: _showSecurityDetails,
+                icon: const Icon(Icons.shield_outlined),
+                tooltip: 'Защита диалога',
+              ),
+              const SizedBox(width: 6),
+            ],
           ),
           body: SafeArea(
             child: Column(
               children: [
                 Expanded(
-                  child: messages.isEmpty
-                      ? const _ChatEmpty()
-                      : ListView.builder(
-                          reverse: true,
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 20,
-                          ),
-                          itemCount: messages.length,
-                          itemBuilder: (context, index) {
-                            return _MessageBubble(
-                              message: messages[messages.length - index - 1],
-                            );
-                          },
-                        ),
+                  child: Center(
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 920),
+                      child: messages.isEmpty
+                          ? _ChatEmpty(
+                              contactName: widget.contact.displayName,
+                              cryptoInfo: widget.controller.cryptoInfo,
+                            )
+                          : ListView.builder(
+                              reverse: true,
+                              padding: const EdgeInsets.fromLTRB(
+                                16,
+                                24,
+                                16,
+                                14,
+                              ),
+                              itemCount: messages.length,
+                              itemBuilder: (context, index) {
+                                return _MessageBubble(
+                                  message:
+                                      messages[messages.length - index - 1],
+                                );
+                              },
+                            ),
+                    ),
+                  ),
                 ),
                 _Composer(
                   controller: _composer,
+                  focusNode: _composerFocus,
                   enabled: !_sending,
                   onSend: _send,
                 ),
@@ -78,6 +118,25 @@ class _ChatScreenState extends State<ChatScreen> {
           ),
         );
       },
+    );
+  }
+
+  String _connectionLabel() {
+    final transport = widget.controller.relayReady
+        ? 'relay подключён'
+        : 'локальная очередь';
+    return '${widget.controller.cryptoInfo.label} · $transport';
+  }
+
+  Future<void> _showSecurityDetails() async {
+    await showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      isScrollControlled: true,
+      builder: (context) => _SecurityDetails(
+        contact: widget.contact,
+        cryptoInfo: widget.controller.cryptoInfo,
+      ),
     );
   }
 
@@ -91,32 +150,67 @@ class _ChatScreenState extends State<ChatScreen> {
     } catch (_) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Не удалось зашифровать сообщение.')),
+        const SnackBar(
+          content: Text(
+            'Сообщение не зашифровано. Проверьте данные контакта и повторите попытку.',
+          ),
+        ),
       );
     } finally {
-      if (mounted) setState(() => _sending = false);
+      if (mounted) {
+        setState(() => _sending = false);
+        _composerFocus.requestFocus();
+      }
     }
   }
 }
 
 class _ChatEmpty extends StatelessWidget {
-  const _ChatEmpty();
+  const _ChatEmpty({required this.contactName, required this.cryptoInfo});
+
+  final String contactName;
+  final CryptoEngineInfo cryptoInfo;
 
   @override
   Widget build(BuildContext context) {
-    return const Center(
-      child: Padding(
-        padding: EdgeInsets.all(32),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.lock_outline, size: 44),
-            SizedBox(height: 12),
-            Text(
-              'Сообщения шифруются до помещения в очередь.',
-              textAlign: TextAlign.center,
-            ),
-          ],
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 430),
+        child: Padding(
+          padding: const EdgeInsets.all(32),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 52,
+                height: 52,
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.primaryContainer,
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: const Icon(Icons.lock_outline),
+              ),
+              const SizedBox(height: 18),
+              Text(
+                'Диалог с $contactName',
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.headlineSmall,
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'Сообщение шифруется на этом устройстве до попадания в очередь или на relay.',
+                textAlign: TextAlign.center,
+              ),
+              if (!cryptoInfo.supportsForwardSecrecy) ...[
+                const SizedBox(height: 14),
+                Text(
+                  'Текущий MVP ещё не использует Double Ratchet и не обеспечивает прямую секретность.',
+                  textAlign: TextAlign.center,
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+              ],
+            ],
+          ),
         ),
       ),
     );
@@ -132,93 +226,221 @@ class _MessageBubble extends StatelessWidget {
   Widget build(BuildContext context) {
     final outgoing = message.direction == MessageDirection.outgoing;
     final colorScheme = Theme.of(context).colorScheme;
+    final bubbleColor = outgoing
+        ? colorScheme.primaryContainer
+        : colorScheme.surfaceContainerLowest;
     return Align(
       alignment: outgoing ? Alignment.centerRight : Alignment.centerLeft,
       child: Container(
-        constraints: const BoxConstraints(maxWidth: 520),
+        constraints: BoxConstraints(
+          maxWidth: MediaQuery.sizeOf(context).width < 600 ? 330 : 540,
+        ),
         margin: const EdgeInsets.only(bottom: 10),
-        padding: const EdgeInsets.fromLTRB(15, 11, 15, 9),
+        padding: const EdgeInsets.fromLTRB(14, 10, 12, 8),
         decoration: BoxDecoration(
-          color: outgoing
-              ? colorScheme.primaryContainer
-              : colorScheme.surfaceContainerHighest,
+          color: bubbleColor,
+          border: outgoing
+              ? null
+              : Border.all(color: Theme.of(context).dividerColor),
           borderRadius: BorderRadius.only(
-            topLeft: const Radius.circular(18),
-            topRight: const Radius.circular(18),
-            bottomLeft: Radius.circular(outgoing ? 18 : 5),
-            bottomRight: Radius.circular(outgoing ? 5 : 18),
+            topLeft: const Radius.circular(16),
+            topRight: const Radius.circular(16),
+            bottomLeft: Radius.circular(outgoing ? 16 : 4),
+            bottomRight: Radius.circular(outgoing ? 4 : 16),
           ),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
-            Align(alignment: Alignment.centerLeft, child: Text(message.body)),
-            const SizedBox(height: 5),
-            Text(
-              _statusLabel(message.status),
-              style: Theme.of(context).textTheme.bodySmall,
+            Align(
+              alignment: Alignment.centerLeft,
+              child: SelectableText(message.body),
             ),
+            const SizedBox(height: 5),
+            _MessageMeta(message: message),
           ],
         ),
       ),
     );
   }
+}
 
-  String _statusLabel(MessageStatus status) => switch (status) {
-    MessageStatus.encrypting => 'Шифруется…',
-    MessageStatus.queued => 'Зашифровано · в очереди',
-    MessageStatus.sent => 'Отправлено',
-    MessageStatus.delivered => 'Доставлено',
-    MessageStatus.failed => 'Ошибка',
-  };
+class _MessageMeta extends StatelessWidget {
+  const _MessageMeta({required this.message});
+
+  final ChatMessage message;
+
+  @override
+  Widget build(BuildContext context) {
+    final time = message.createdAt.toLocal();
+    final status = _statusPresentation(message.status);
+    final error = message.status == MessageStatus.failed;
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}',
+          style: Theme.of(context).textTheme.bodySmall,
+        ),
+        if (message.direction == MessageDirection.outgoing) ...[
+          const SizedBox(width: 6),
+          Icon(
+            status.icon,
+            size: 14,
+            color: error
+                ? Theme.of(context).colorScheme.error
+                : Theme.of(context).colorScheme.primary,
+          ),
+          const SizedBox(width: 3),
+          Text(
+            status.label,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: error ? Theme.of(context).colorScheme.error : null,
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+
+  ({IconData icon, String label}) _statusPresentation(MessageStatus status) {
+    return switch (status) {
+      MessageStatus.encrypting => (
+        icon: Icons.lock_clock_outlined,
+        label: 'шифруется',
+      ),
+      MessageStatus.queued => (
+        icon: Icons.schedule_outlined,
+        label: 'в очереди',
+      ),
+      MessageStatus.sent => (icon: Icons.check, label: 'отправлено'),
+      MessageStatus.delivered => (icon: Icons.done_all, label: 'доставлено'),
+      MessageStatus.failed => (icon: Icons.error_outline, label: 'ошибка'),
+    };
+  }
 }
 
 class _Composer extends StatelessWidget {
   const _Composer({
     required this.controller,
+    required this.focusNode,
     required this.enabled,
     required this.onSend,
   });
 
   final TextEditingController controller;
+  final FocusNode focusNode;
   final bool enabled;
   final VoidCallback onSend;
 
   @override
   Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
-        border: Border(top: BorderSide(color: Theme.of(context).dividerColor)),
-      ),
+    return Material(
+      color: Theme.of(context).colorScheme.surface,
+      shape: Border(top: BorderSide(color: Theme.of(context).dividerColor)),
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            Expanded(
-              child: TextField(
-                controller: controller,
-                enabled: enabled,
-                minLines: 1,
-                maxLines: 5,
-                textInputAction: TextInputAction.newline,
-                decoration: const InputDecoration(
-                  hintText: 'Сообщение',
-                  contentPadding: EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 12,
+        padding: const EdgeInsets.fromLTRB(14, 11, 14, 14),
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 920),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: controller,
+                    focusNode: focusNode,
+                    enabled: enabled,
+                    minLines: 1,
+                    maxLines: 5,
+                    maxLength: 4000,
+                    textCapitalization: TextCapitalization.sentences,
+                    textInputAction: TextInputAction.newline,
+                    decoration: const InputDecoration(
+                      hintText: 'Напишите сообщение',
+                      counterText: '',
+                      contentPadding: EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 12,
+                      ),
+                    ),
                   ),
                 ),
-              ),
+                const SizedBox(width: 10),
+                ValueListenableBuilder<TextEditingValue>(
+                  valueListenable: controller,
+                  builder: (context, value, _) {
+                    final canSend = enabled && value.text.trim().isNotEmpty;
+                    return IconButton.filled(
+                      onPressed: canSend ? onSend : null,
+                      icon: enabled
+                          ? const Icon(Icons.arrow_upward)
+                          : const SizedBox.square(
+                              dimension: 18,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            ),
+                      tooltip: 'Зашифровать и отправить',
+                    );
+                  },
+                ),
+              ],
             ),
-            const SizedBox(width: 10),
-            IconButton.filled(
-              onPressed: enabled ? onSend : null,
-              icon: const Icon(Icons.arrow_upward),
-              tooltip: 'Зашифровать и отправить',
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _SecurityDetails extends StatelessWidget {
+  const _SecurityDetails({required this.contact, required this.cryptoInfo});
+
+  final Contact contact;
+  final CryptoEngineInfo cryptoInfo;
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.fromLTRB(24, 6, 24, 28),
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 560),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Защита этого диалога',
+                  style: Theme.of(context).textTheme.headlineSmall,
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  'Криптосхема: ${cryptoInfo.label}',
+                  style: const TextStyle(fontWeight: FontWeight.w700),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  cryptoInfo.supportsForwardSecrecy
+                      ? 'Для диалога включена прямая секретность.'
+                      : 'В этой MVP-сборке Double Ratchet ещё не подключён, поэтому прямой секретности пока нет.',
+                ),
+                const SizedBox(height: 24),
+                Text(
+                  'Отпечаток контакта',
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+                const SizedBox(height: 8),
+                SelectableText(
+                  contact.fingerprint,
+                  style: const TextStyle(fontFamily: 'monospace', height: 1.5),
+                ),
+                const SizedBox(height: 10),
+                const Text(
+                  'Сравните этот отпечаток при личной встрече или по другому доверенному каналу, чтобы исключить подмену контакта.',
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );

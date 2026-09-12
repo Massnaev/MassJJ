@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import '../app_controller.dart';
 import '../core/identity/anonymous_identity.dart';
 import 'chat_screen.dart';
+import 'invite_code_panel.dart';
 
 class HomeShell extends StatefulWidget {
   const HomeShell({required this.controller, super.key});
@@ -291,7 +292,7 @@ class _ContactsPage extends StatelessWidget {
                     icon: Icons.qr_code_2,
                     title: 'Контактов пока нет',
                     body:
-                        'В MVP используется текстовый код. Сканирование QR появится следующим этапом.',
+                        'Ваш QR-код находится в профиле. Камерное сканирование добавим после подключения платформенных разрешений.',
                   )
                 : ListView.separated(
                     itemCount: controller.contacts.length,
@@ -361,35 +362,12 @@ class _ProfilePageState extends State<_ProfilePage> {
             ),
           ),
           const SizedBox(height: 14),
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Text(
-                    'Код приглашения',
-                    style: Theme.of(context).textTheme.titleMedium,
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    widget.controller.inviteCode,
-                    maxLines: 3,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(fontFamily: 'monospace'),
-                  ),
-                  const SizedBox(height: 12),
-                  OutlinedButton.icon(
-                    onPressed: () => _copy(
-                      context,
-                      widget.controller.inviteCode,
-                      'Код приглашения скопирован',
-                    ),
-                    icon: const Icon(Icons.copy_outlined),
-                    label: const Text('Копировать код'),
-                  ),
-                ],
-              ),
+          InviteCodePanel(
+            inviteCode: widget.controller.inviteCode,
+            onCopy: () => _copy(
+              context,
+              widget.controller.inviteCode,
+              'Код приглашения скопирован',
             ),
           ),
           const SizedBox(height: 14),

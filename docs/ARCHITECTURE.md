@@ -16,6 +16,12 @@ UI -> AppController -> CryptoEngine -> EncryptedPacket -> TransportRouter
 2. the capability-authenticated Internet relay;
 3. the persistent local outbox.
 
+`EncryptedPacket` carries a versioned `cryptoSuite` identifier and an opaque
+`cryptoHeader`. The current MVP suite leaves the header empty. A future Double
+Ratchet engine can place its ratchet public key and message counters there
+without changing relay, nearby, or delayed-delivery transports. Older v1
+packets without those fields continue to decode as the MVP suite.
+
 Future DTN forwarding reuses `EncryptedPacket`. Relays decrement `hopLimit`,
 reject expired packets, deduplicate by `messageId`, and retain only a bounded
 number of copies using a spray-and-wait policy.
@@ -28,3 +34,7 @@ number of copies using a spray-and-wait policy.
 - `core/transport`: delivery adapters and routing policy;
 - `data`: encrypted local value store;
 - `ui`: responsive Material client.
+
+The UI reads cryptographic capabilities from `CryptoEngineInfo`. This prevents
+the current static-key MVP from being presented as forward-secret while keeping
+the screen independent of the eventual audited engine.

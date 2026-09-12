@@ -12,9 +12,18 @@ import 'crypto_engine.dart';
 /// This intentionally lives behind [CryptoEngine] so it can be replaced by an
 /// audited Signal/PQXDH + Double Ratchet implementation before production.
 class MvpCryptoEngine implements CryptoEngine {
+  static const suite = 'mvp-x25519-aesgcm-v1';
+
   final X25519 _keyAgreement = X25519();
   final Cipher _cipher = AesGcm.with256bits();
   final Hkdf _kdf = Hkdf(hmac: Hmac.sha256(), outputLength: 32);
+
+  @override
+  CryptoEngineInfo get info => const CryptoEngineInfo(
+    suite: suite,
+    label: 'MVP E2EE',
+    supportsForwardSecrecy: false,
+  );
 
   @override
   Future<EncryptedPacket> encrypt({
@@ -40,6 +49,7 @@ class MvpCryptoEngine implements CryptoEngine {
       aad: aad,
     );
     return EncryptedPacket(
+      cryptoSuite: suite,
       messageId: message.id,
       senderId: sender.userId,
       recipientId: recipient.userId,
