@@ -5,7 +5,13 @@ import 'package:cryptography/cryptography.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-class LocalVault {
+abstract interface class JsonVault {
+  Future<Map<String, dynamic>?> readJson(String key);
+
+  Future<void> writeJson(String key, Map<String, Object?> value);
+}
+
+class LocalVault implements JsonVault {
   LocalVault({
     FlutterSecureStorage? secureStorage,
     SharedPreferencesAsync? preferences,
@@ -19,6 +25,7 @@ class LocalVault {
   final SharedPreferencesAsync _preferences;
   final Cipher _cipher = AesGcm.with256bits();
 
+  @override
   Future<Map<String, dynamic>?> readJson(String key) async {
     final stored = await _preferences.getString('$_valuePrefix$key');
     if (stored == null) return null;
@@ -36,6 +43,7 @@ class LocalVault {
     return jsonDecode(utf8.decode(clearText)) as Map<String, dynamic>;
   }
 
+  @override
   Future<void> writeJson(String key, Map<String, Object?> value) async {
     final secretBox = await _cipher.encrypt(
       utf8.encode(jsonEncode(value)),

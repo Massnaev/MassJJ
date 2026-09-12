@@ -18,6 +18,13 @@ ThemeData buildAppTheme() {
     fontFamily: 'Segoe UI',
     dividerColor: line,
     textTheme: const TextTheme(
+      displaySmall: TextStyle(
+        color: ink,
+        fontSize: 46,
+        height: 1.04,
+        fontWeight: FontWeight.w700,
+        letterSpacing: -1.7,
+      ),
       headlineLarge: TextStyle(
         color: ink,
         fontSize: 34,
@@ -40,7 +47,7 @@ ThemeData buildAppTheme() {
       color: Color(0xFFFBF9F3),
       margin: EdgeInsets.zero,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.all(Radius.circular(20)),
+        borderRadius: BorderRadius.all(Radius.circular(16)),
         side: BorderSide(color: line),
       ),
     ),
@@ -54,6 +61,20 @@ ThemeData buildAppTheme() {
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.all(Radius.circular(16)),
         borderSide: BorderSide(color: line),
+      ),
+    ),
+    filledButtonTheme: FilledButtonThemeData(
+      style: FilledButton.styleFrom(
+        minimumSize: const Size(0, 48),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        textStyle: const TextStyle(fontWeight: FontWeight.w700),
+      ),
+    ),
+    outlinedButtonTheme: OutlinedButtonThemeData(
+      style: OutlinedButton.styleFrom(
+        minimumSize: const Size(0, 48),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        textStyle: const TextStyle(fontWeight: FontWeight.w600),
       ),
     ),
   );

@@ -13,15 +13,22 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   final vault = LocalVault();
+  final identityService = IdentityService(vault);
   final messages = MessageRepository(vault);
-  final controller = AppController(
-    identityService: IdentityService(vault),
-    messageRepository: messages,
-    cryptoEngine: MvpCryptoEngine(),
-    transportRouter: TransportRouter([LocalOutboxTransport(messages)]),
-    relayUrl: const String.fromEnvironment('RELAY_URL'),
+  runApp(
+    P2PMessengerApp(
+      identityService: identityService,
+      createController: () async {
+        final controller = AppController(
+          identityService: identityService,
+          messageRepository: messages,
+          cryptoEngine: MvpCryptoEngine(),
+          transportRouter: TransportRouter([LocalOutboxTransport(messages)]),
+          relayUrl: const String.fromEnvironment('RELAY_URL'),
+        );
+        await controller.initialize();
+        return controller;
+      },
+    ),
   );
-
-  await controller.initialize();
-  runApp(P2PMessengerApp(controller: controller));
 }

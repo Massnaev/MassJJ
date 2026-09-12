@@ -44,7 +44,7 @@ class AppController extends ChangeNotifier {
   bool get relayReady => _relayTransport?.state == TransportState.ready;
 
   Future<void> initialize() async {
-    identity = await _identityService.loadOrCreate();
+    identity = await _identityService.load();
     contacts = await _messageRepository.loadContacts();
     messages = await _messageRepository.loadMessages();
     if (_relayUrl.isNotEmpty) {

@@ -34,8 +34,17 @@ class _HomeShellState extends State<HomeShell> {
             final body = IndexedStack(
               index: _selectedIndex,
               children: [
-                _ChatsPage(controller: widget.controller, onOpen: _openChat),
-                _ContactsPage(controller: widget.controller, onOpen: _openChat),
+                _ChatsPage(
+                  controller: widget.controller,
+                  onOpen: _openChat,
+                  onAddContact: _showAddContact,
+                  onShowProfile: () => setState(() => _selectedIndex = 2),
+                ),
+                _ContactsPage(
+                  controller: widget.controller,
+                  onOpen: _openChat,
+                  onAddContact: _showAddContact,
+                ),
                 _ProfilePage(controller: widget.controller),
               ],
             );
@@ -94,6 +103,57 @@ class _HomeShellState extends State<HomeShell> {
       ),
     );
   }
+
+  Future<void> _showAddContact() async {
+    final textController = TextEditingController();
+    String? error;
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          title: const Text('Добавить контакт'),
+          content: SizedBox(
+            width: 480,
+            child: TextField(
+              controller: textController,
+              minLines: 3,
+              maxLines: 6,
+              autofocus: true,
+              autocorrect: false,
+              enableSuggestions: false,
+              decoration: InputDecoration(
+                labelText: 'Код приглашения',
+                hintText: 'p2p1.…',
+                errorText: error,
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: const Text('Отмена'),
+            ),
+            FilledButton(
+              onPressed: () async {
+                try {
+                  final contact = await widget.controller.addContact(
+                    textController.text,
+                  );
+                  if (!dialogContext.mounted) return;
+                  Navigator.pop(dialogContext);
+                  _openChat(contact);
+                } on FormatException catch (exception) {
+                  setDialogState(() => error = exception.message.toString());
+                }
+              },
+              child: const Text('Добавить'),
+            ),
+          ],
+        ),
+      ),
+    );
+    textController.dispose();
+  }
 }
 
 class _PageFrame extends StatelessWidget {
@@ -109,6 +169,7 @@ class _PageFrame extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final showMark = MediaQuery.sizeOf(context).width < 820;
     return Center(
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 920),
@@ -119,8 +180,7 @@ class _PageFrame extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  const _Mark(),
-                  const SizedBox(width: 14),
+                  if (showMark) ...[const _Mark(), const SizedBox(width: 14)],
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -147,10 +207,17 @@ class _PageFrame extends StatelessWidget {
 }
 
 class _ChatsPage extends StatelessWidget {
-  const _ChatsPage({required this.controller, required this.onOpen});
+  const _ChatsPage({
+    required this.controller,
+    required this.onOpen,
+    required this.onAddContact,
+    required this.onShowProfile,
+  });
 
   final AppController controller;
   final ValueChanged<Contact> onOpen;
+  final VoidCallback onAddContact;
+  final VoidCallback onShowProfile;
 
   @override
   Widget build(BuildContext context) {
@@ -163,11 +230,15 @@ class _ChatsPage extends StatelessWidget {
           const SizedBox(height: 16),
           Expanded(
             child: controller.contacts.isEmpty
-                ? const _EmptyState(
+                ? _EmptyState(
                     icon: Icons.person_add_alt_1_outlined,
                     title: 'Добавьте первый контакт',
                     body:
-                        'Откройте вкладку «Контакты» и вставьте код приглашения с другого устройства.',
+                        'Вставьте код приглашения с другого устройства. После этого можно сразу начать зашифрованный диалог.',
+                    primaryLabel: 'Добавить контакт',
+                    onPrimary: onAddContact,
+                    secondaryLabel: 'Показать мой код',
+                    onSecondary: onShowProfile,
                   )
                 : ListView.separated(
                     itemCount: controller.contacts.length,
@@ -190,10 +261,15 @@ class _ChatsPage extends StatelessWidget {
 }
 
 class _ContactsPage extends StatelessWidget {
-  const _ContactsPage({required this.controller, required this.onOpen});
+  const _ContactsPage({
+    required this.controller,
+    required this.onOpen,
+    required this.onAddContact,
+  });
 
   final AppController controller;
   final ValueChanged<Contact> onOpen;
+  final VoidCallback onAddContact;
 
   @override
   Widget build(BuildContext context) {
@@ -204,7 +280,7 @@ class _ContactsPage extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           FilledButton.icon(
-            onPressed: () => _showAddContact(context),
+            onPressed: onAddContact,
             icon: const Icon(Icons.add),
             label: const Text('Добавить по коду'),
           ),
@@ -233,50 +309,6 @@ class _ContactsPage extends StatelessWidget {
         ],
       ),
     );
-  }
-
-  Future<void> _showAddContact(BuildContext context) async {
-    final textController = TextEditingController();
-    String? error;
-    await showDialog<void>(
-      context: context,
-      builder: (dialogContext) => StatefulBuilder(
-        builder: (context, setDialogState) => AlertDialog(
-          title: const Text('Код контакта'),
-          content: SizedBox(
-            width: 480,
-            child: TextField(
-              controller: textController,
-              minLines: 3,
-              maxLines: 6,
-              decoration: InputDecoration(hintText: 'p2p1.…', errorText: error),
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(dialogContext),
-              child: const Text('Отмена'),
-            ),
-            FilledButton(
-              onPressed: () async {
-                try {
-                  final contact = await controller.addContact(
-                    textController.text,
-                  );
-                  if (!dialogContext.mounted) return;
-                  Navigator.pop(dialogContext);
-                  onOpen(contact);
-                } on FormatException catch (exception) {
-                  setDialogState(() => error = exception.message.toString());
-                }
-              },
-              child: const Text('Добавить'),
-            ),
-          ],
-        ),
-      ),
-    );
-    textController.dispose();
   }
 }
 
@@ -449,9 +481,14 @@ class _TransportBanner extends StatelessWidget {
         : controller.relayConfigured
         ? 'Relay недоступен; сообщения дождутся подключения.'
         : 'Пакеты шифруются и ждут настройки RELAY_URL.';
-    return Card(
+    return Container(
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.08),
+        border: Border.all(color: color.withValues(alpha: 0.28)),
+        borderRadius: BorderRadius.circular(12),
+      ),
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         child: Row(
           children: [
             Container(
@@ -513,11 +550,19 @@ class _EmptyState extends StatelessWidget {
     required this.icon,
     required this.title,
     required this.body,
+    this.primaryLabel,
+    this.onPrimary,
+    this.secondaryLabel,
+    this.onSecondary,
   });
 
   final IconData icon;
   final String title;
   final String body;
+  final String? primaryLabel;
+  final VoidCallback? onPrimary;
+  final String? secondaryLabel;
+  final VoidCallback? onSecondary;
 
   @override
   Widget build(BuildContext context) {
@@ -536,6 +581,18 @@ class _EmptyState extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Text(body, textAlign: TextAlign.center),
+            if (primaryLabel != null && onPrimary != null) ...[
+              const SizedBox(height: 22),
+              FilledButton.icon(
+                onPressed: onPrimary,
+                icon: const Icon(Icons.add),
+                label: Text(primaryLabel!),
+              ),
+            ],
+            if (secondaryLabel != null && onSecondary != null) ...[
+              const SizedBox(height: 6),
+              TextButton(onPressed: onSecondary, child: Text(secondaryLabel!)),
+            ],
           ],
         ),
       ),

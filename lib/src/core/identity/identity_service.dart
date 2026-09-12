@@ -10,9 +10,21 @@ class IdentityService {
   IdentityService(this._vault);
 
   static const _identityKey = 'identity.v1';
-  final LocalVault _vault;
+  final JsonVault _vault;
   final X25519 _x25519 = X25519();
   final Sha256 _sha256 = Sha256();
+
+  Future<bool> hasIdentity() async {
+    return await _vault.readJson(_identityKey) != null;
+  }
+
+  Future<AnonymousIdentity> load() async {
+    final stored = await _vault.readJson(_identityKey);
+    if (stored == null) {
+      throw StateError('Локальная личность ещё не создана.');
+    }
+    return _identityFromJson(stored);
+  }
 
   Future<AnonymousIdentity> loadOrCreate() async {
     final stored = await _vault.readJson(_identityKey);
@@ -20,8 +32,72 @@ class IdentityService {
       return _identityFromJson(stored);
     }
 
+    return create();
+  }
+
+  Future<AnonymousIdentity> create() async {
+    final stored = await _vault.readJson(_identityKey);
+    if (stored != null) {
+      return _identityFromJson(stored);
+    }
+
     final random = Random.secure();
     final seed = List<int>.generate(32, (_) => random.nextInt(256));
+    final identity = await _identityFromSeed(
+      seed: seed,
+      inboxReadToken: _randomToken(),
+      inboxWriteToken: _randomToken(),
+    );
+    await _vault.writeJson(_identityKey, _identityToJson(identity));
+    return identity;
+  }
+
+  Future<AnonymousIdentity> restore(String rawCode) async {
+    final code = rawCode.trim();
+    if (!code.startsWith('p2pr1.')) {
+      throw const FormatException(
+        'Код восстановления должен начинаться с p2pr1.',
+      );
+    }
+
+    try {
+      final data =
+          jsonDecode(
+                utf8.decode(
+                  base64Url.decode(base64Url.normalize(code.substring(6))),
+                ),
+              )
+              as Map<String, dynamic>;
+      final seed = base64Url.decode(data['seed'] as String);
+      final readToken = data['read'] as String;
+      final writeToken = data['write'] as String;
+      final validToken = RegExp(r'^[A-Za-z0-9_-]{32,128}$');
+      if (data['v'] != 1 ||
+          seed.length != 32 ||
+          !validToken.hasMatch(readToken) ||
+          !validToken.hasMatch(writeToken)) {
+        throw const FormatException('Неподдерживаемый код восстановления.');
+      }
+
+      final identity = await _identityFromSeed(
+        seed: seed,
+        inboxReadToken: readToken,
+        inboxWriteToken: writeToken,
+      );
+      await _vault.writeJson(_identityKey, _identityToJson(identity));
+      return identity;
+    } on FormatException {
+      rethrow;
+    } catch (_) {
+      throw const FormatException('Код восстановления повреждён.');
+    }
+  }
+
+  Future<AnonymousIdentity> _identityFromSeed({
+    required List<int> seed,
+    required String inboxReadToken,
+    required String inboxWriteToken,
+  }) async {
     final keyPair = await _x25519.newKeyPairFromSeed(seed);
     final publicKey = await keyPair.extractPublicKey();
     final digest = await _sha256.hash(publicKey.bytes);
@@ -34,10 +110,9 @@ class IdentityService {
       publicKey: publicKey.bytes,
       privateSeed: seed,
       fingerprint: _formatFingerprint(digest.bytes),
-      inboxReadToken: _randomToken(),
-      inboxWriteToken: _randomToken(),
+      inboxReadToken: inboxReadToken,
+      inboxWriteToken: inboxWriteToken,
     );
-    await _vault.writeJson(_identityKey, _identityToJson(identity));
     return identity;
   }
 

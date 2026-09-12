@@ -6,6 +6,8 @@ are local identities: no phone number, email address, or password-reset service.
 ## Included
 
 - local X25519 identity and a portable recovery code;
+- first-run flow for creating or restoring an identity, with an explicit backup
+  confirmation;
 - copy/paste invitation codes (`p2p1.…`);
 - encrypted local storage backed by the platform secure store;
 - authenticated encrypted message envelopes;
