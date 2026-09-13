@@ -11,6 +11,11 @@
   public key, display name, fingerprint, and write-only mailbox capability. They
   never contain the private seed, read capability, or recovery code.
 
+Camera access is requested only after the user opens the scanner on Android or
+iOS. Windows does not initialize a camera plugin and retains text-code entry.
+The scanned payload is passed through the same strict invitation parser as a
+manually pasted code.
+
 ## What is deliberately not production-ready
 
 `MvpCryptoEngine` derives a conversation key from static X25519 identity keys.

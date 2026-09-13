@@ -1,8 +1,11 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../app_controller.dart';
 import '../core/identity/anonymous_identity.dart';
+import 'add_contact_screen.dart';
 import 'chat_screen.dart';
 import 'invite_code_panel.dart';
 
@@ -106,54 +109,16 @@ class _HomeShellState extends State<HomeShell> {
   }
 
   Future<void> _showAddContact() async {
-    final textController = TextEditingController();
-    String? error;
-    await showDialog<void>(
-      context: context,
-      builder: (dialogContext) => StatefulBuilder(
-        builder: (context, setDialogState) => AlertDialog(
-          title: const Text('Добавить контакт'),
-          content: SizedBox(
-            width: 480,
-            child: TextField(
-              controller: textController,
-              minLines: 3,
-              maxLines: 6,
-              autofocus: true,
-              autocorrect: false,
-              enableSuggestions: false,
-              decoration: InputDecoration(
-                labelText: 'Код приглашения',
-                hintText: 'p2p1.…',
-                errorText: error,
-              ),
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(dialogContext),
-              child: const Text('Отмена'),
-            ),
-            FilledButton(
-              onPressed: () async {
-                try {
-                  final contact = await widget.controller.addContact(
-                    textController.text,
-                  );
-                  if (!dialogContext.mounted) return;
-                  Navigator.pop(dialogContext);
-                  _openChat(contact);
-                } on FormatException catch (exception) {
-                  setDialogState(() => error = exception.message.toString());
-                }
-              },
-              child: const Text('Добавить'),
-            ),
-          ],
+    final contact = await Navigator.of(context).push<Contact>(
+      MaterialPageRoute<Contact>(
+        builder: (_) => AddContactScreen(
+          cameraEnabled: Platform.isAndroid || Platform.isIOS,
+          addContact: widget.controller.addContact,
         ),
       ),
     );
-    textController.dispose();
+    if (!mounted || contact == null) return;
+    _openChat(contact);
   }
 }
 
