@@ -14,15 +14,23 @@ are local identities: no phone number, email address, or password-reset service.
 - encrypted local storage backed by the platform secure store;
 - authenticated encrypted message envelopes;
 - persistent local outbox;
+- private contact discovery and direct encrypted delivery inside the same local
+  Wi-Fi network;
 - transport routing boundary for relay, nearby, and DTN delivery;
 - responsive phone/desktop interface in Russian;
 - explicit in-chat disclosure of the active crypto suite and contact
   fingerprint.
 
-With `RELAY_URL` configured, the client registers its anonymous mailbox, sends,
-polls, decrypts, and acknowledges packets. Without connectivity it keeps packets
-in the encrypted outbox and retries after the relay recovers. Native
-Nearby/Bluetooth/Wi-Fi adapters are the next transport slices.
+The client first tries a discovered contact directly over the local network,
+then a configured relay, and finally the encrypted outbox. With `RELAY_URL`
+configured, it registers its anonymous mailbox, sends, polls, decrypts, and
+acknowledges packets. Without Internet, two devices connected to the same LAN
+can exchange encrypted packets directly. Otherwise packets stay queued and are
+retried when a route appears.
+
+This slice uses Bonjour/mDNS and ordinary LAN TCP. It is not Wi-Fi Direct and
+does not yet bridge distant offline devices or use Bluetooth. Protocol details
+and limitations are in [`docs/NEARBY_WIFI.md`](docs/NEARBY_WIFI.md).
 
 An independently runnable opaque relay with capability-separated mailbox access
 lives in [`server/`](server/). It uses only Node.js built-ins and has integration
@@ -72,6 +80,8 @@ flutter test e2e/relay_e2e_test.dart
 
 Android builds require the Android SDK. iOS builds must be signed and compiled
 on macOS with Xcode, even though the shared Dart code can be developed here.
+Windows Firewall and the iOS local-network permission prompt must allow local
+discovery and inbound delivery.
 
 ## Security status
 

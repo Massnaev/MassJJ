@@ -122,7 +122,9 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   String _connectionLabel() {
-    final transport = widget.controller.relayReady
+    final transport = widget.controller.isContactNearby(widget.contact.userId)
+        ? 'рядом по Wi-Fi'
+        : widget.controller.relayReady
         ? 'relay подключён'
         : 'локальная очередь';
     return '${widget.controller.cryptoInfo.label} · $transport';

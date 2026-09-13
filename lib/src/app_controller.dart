@@ -7,10 +7,12 @@ import 'core/crypto/crypto_engine.dart';
 import 'core/identity/anonymous_identity.dart';
 import 'core/identity/identity_service.dart';
 import 'core/messaging/chat_message.dart';
+import 'core/messaging/encrypted_packet.dart';
 import 'core/messaging/message_repository.dart';
-import 'core/transport/transport_router.dart';
-import 'core/transport/relay_transport.dart';
 import 'core/transport/delivery_transport.dart';
+import 'core/transport/nearby_runtime.dart';
+import 'core/transport/relay_transport.dart';
+import 'core/transport/transport_router.dart';
 
 class AppController extends ChangeNotifier {
   AppController({
@@ -19,17 +21,20 @@ class AppController extends ChangeNotifier {
     required CryptoEngine cryptoEngine,
     required TransportRouter transportRouter,
     required String relayUrl,
+    bool enableNearby = true,
   }) : _identityService = identityService,
        _messageRepository = messageRepository,
        _cryptoEngine = cryptoEngine,
        _transportRouter = transportRouter,
-       _relayUrl = relayUrl;
+       _relayUrl = relayUrl,
+       _enableNearby = enableNearby;
 
   final IdentityService _identityService;
   final MessageRepository _messageRepository;
   final CryptoEngine _cryptoEngine;
   final TransportRouter _transportRouter;
   final String _relayUrl;
+  final bool _enableNearby;
   final Uuid _uuid = const Uuid();
 
   late AnonymousIdentity identity;
@@ -37,17 +42,41 @@ class AppController extends ChangeNotifier {
   List<ChatMessage> messages = const [];
   bool initialized = false;
   RelayTransport? _relayTransport;
+  NearbyRuntime? _nearbyRuntime;
   Timer? _pollTimer;
   bool _syncing = false;
+  bool _disposed = false;
+  final Set<String> _processingIncoming = {};
 
   bool get relayConfigured => _relayUrl.isNotEmpty;
   bool get relayReady => _relayTransport?.state == TransportState.ready;
+  bool get nearbyReady => _nearbyRuntime != null;
+  int get nearbyPeerCount => _nearbyRuntime?.peerCount ?? 0;
   CryptoEngineInfo get cryptoInfo => _cryptoEngine.info;
+
+  bool isContactNearby(String contactId) {
+    return _nearbyRuntime?.isNearby(contactId) ?? false;
+  }
 
   Future<void> initialize() async {
     identity = await _identityService.load();
     contacts = await _messageRepository.loadContacts();
     messages = await _messageRepository.loadMessages();
+    if (_enableNearby) {
+      final runtime = NearbyRuntime(
+        identity: identity,
+        contacts: () => contacts,
+        onPacket: _acceptIncoming,
+        onPeersChanged: _onNearbyPeersChanged,
+      );
+      _nearbyRuntime = runtime;
+      try {
+        await runtime.start();
+        _transportRouter.addTransport(runtime.transport);
+      } catch (_) {
+        _nearbyRuntime = null;
+      }
+    }
     if (_relayUrl.isNotEmpty) {
       final relay = RelayTransport(
         baseUri: Uri.parse(_relayUrl),
@@ -58,13 +87,15 @@ class AppController extends ChangeNotifier {
       try {
         await relay.registerMailbox();
         _transportRouter.addTransport(relay);
-        await _syncRelay();
       } catch (_) {
         // Offline startup is expected. The local outbox remains available.
       }
+    }
+    await _syncTransports();
+    if (_nearbyRuntime != null || _relayTransport != null) {
       _pollTimer = Timer.periodic(
-        const Duration(seconds: 8),
-        (_) => unawaited(_syncRelay()),
+        const Duration(seconds: 5),
+        (_) => unawaited(_syncTransports()),
       );
     }
     initialized = true;
@@ -78,69 +109,36 @@ class AppController extends ChangeNotifier {
     return null;
   }
 
-  Future<void> synchronize() => _syncRelay();
+  void _onNearbyPeersChanged() {
+    if (_disposed) return;
+    notifyListeners();
+    unawaited(_syncTransports());
+  }
 
-  Future<void> _syncRelay() async {
+  Future<void> synchronize() => _syncTransports();
+
+  Future<void> _syncTransports() async {
     final relay = _relayTransport;
-    if (relay == null || _syncing) return;
+    if (_syncing) return;
     _syncing = true;
     try {
-      var changed = false;
-      if (relay.state != TransportState.ready) {
-        await relay.registerMailbox();
-        _transportRouter.addTransport(relay);
-      }
-      final outbox = await _messageRepository.loadOutbox();
-      for (final packet in outbox) {
-        if (packet.expiresAt.isBefore(DateTime.now().toUtc())) {
-          await _messageRepository.removeFromOutbox(packet.messageId);
-          continue;
-        }
-        await relay.send(packet);
-        await _messageRepository.removeFromOutbox(packet.messageId);
-        ChatMessage? queuedMessage;
-        for (final message in messages) {
-          if (message.id == packet.messageId) {
-            queuedMessage = message;
-            break;
-          }
-        }
-        if (queuedMessage != null) {
-          _replaceMessage(queuedMessage.copyWith(status: MessageStatus.sent));
-          changed = true;
+      if (relay != null && relay.state != TransportState.ready) {
+        try {
+          await relay.registerMailbox();
+          _transportRouter.addTransport(relay);
+        } catch (_) {
+          // Nearby and the local outbox remain available without the relay.
         }
       }
+      await _retryOutbox();
+      if (relay == null || relay.state != TransportState.ready) return;
       final packets = await relay.receive();
       for (final packet in packets) {
         try {
-          if (!messages.any((message) => message.id == packet.messageId)) {
-            final sender = _findContact(packet.senderId);
-            if (sender != null) {
-              final body = await _cryptoEngine.decrypt(
-                packet: packet,
-                recipient: identity,
-                sender: sender,
-              );
-              messages = [
-                ...messages,
-                ChatMessage(
-                  id: packet.messageId,
-                  contactId: sender.userId,
-                  body: body,
-                  direction: MessageDirection.incoming,
-                  createdAt: packet.createdAt,
-                  status: MessageStatus.delivered,
-                ),
-              ];
-              changed = true;
-            }
-          }
+          await _acceptIncoming(packet);
         } finally {
           await relay.acknowledge(packet.messageId);
         }
-      }
-      if (changed) {
-        await _messageRepository.saveMessages(messages);
       }
       notifyListeners();
     } catch (_) {
@@ -150,9 +148,77 @@ class AppController extends ChangeNotifier {
     }
   }
 
+  Future<void> _retryOutbox() async {
+    var changed = false;
+    try {
+      final outbox = await _messageRepository.loadOutbox();
+      for (final packet in outbox) {
+        if (packet.expiresAt.isBefore(DateTime.now().toUtc())) {
+          await _messageRepository.removeFromOutbox(packet.messageId);
+          continue;
+        }
+        final receipt = await _transportRouter.send(packet);
+        if (receipt.transport == TransportKind.localOutbox) continue;
+        await _messageRepository.removeFromOutbox(packet.messageId);
+        ChatMessage? queuedMessage;
+        for (final message in messages) {
+          if (message.id == packet.messageId) {
+            queuedMessage = message;
+            break;
+          }
+        }
+        if (queuedMessage != null) {
+          _replaceMessage(
+            queuedMessage.copyWith(status: receipt.messageStatus),
+          );
+          changed = true;
+        }
+      }
+      if (changed) {
+        await _messageRepository.saveMessages(messages);
+      }
+    } catch (_) {
+      // The packet stays in the encrypted outbox for the next route attempt.
+    }
+  }
+
+  Future<bool> _acceptIncoming(EncryptedPacket packet) async {
+    if (messages.any((message) => message.id == packet.messageId)) return true;
+    if (!_processingIncoming.add(packet.messageId)) return true;
+    try {
+      final sender = _findContact(packet.senderId);
+      if (sender == null) return false;
+      final body = await _cryptoEngine.decrypt(
+        packet: packet,
+        recipient: identity,
+        sender: sender,
+      );
+      messages = [
+        ...messages,
+        ChatMessage(
+          id: packet.messageId,
+          contactId: sender.userId,
+          body: body,
+          direction: MessageDirection.incoming,
+          createdAt: packet.createdAt,
+          status: MessageStatus.delivered,
+        ),
+      ];
+      await _messageRepository.saveMessages(messages);
+      notifyListeners();
+      return true;
+    } catch (_) {
+      return false;
+    } finally {
+      _processingIncoming.remove(packet.messageId);
+    }
+  }
+
   @override
   void dispose() {
+    _disposed = true;
     _pollTimer?.cancel();
+    unawaited(_nearbyRuntime?.close());
     _relayTransport?.close(force: true);
     super.dispose();
   }
@@ -180,6 +246,7 @@ class AppController extends ChangeNotifier {
 
     contacts = [...contacts, contact];
     await _messageRepository.saveContacts(contacts);
+    await _nearbyRuntime?.refreshContacts();
     notifyListeners();
     return contact;
   }

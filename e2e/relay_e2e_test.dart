@@ -181,6 +181,7 @@ AppController _buildController({
     cryptoEngine: MvpCryptoEngine(),
     transportRouter: TransportRouter([LocalOutboxTransport(messages)]),
     relayUrl: relayUrl,
+    enableNearby: false,
   );
 }
 

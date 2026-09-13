@@ -28,6 +28,12 @@
 	<true/>
 	<key>NSCameraUsageDescription</key>
 	<string>Камера используется только для сканирования QR-кода приглашения.</string>
+	<key>NSBonjourServices</key>
+	<array>
+		<string>_p2pmsg._tcp</string>
+	</array>
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>Локальная сеть используется для прямой доставки зашифрованных сообщений контактам рядом.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

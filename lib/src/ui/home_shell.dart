@@ -413,17 +413,26 @@ class _TransportBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = controller.relayReady
+    final nearby = controller.nearbyPeerCount;
+    final color = nearby > 0 || controller.relayReady
         ? const Color(0xFF3F8061)
         : const Color(0xFFD58B36);
-    final title = controller.relayReady
+    final title = nearby > 0
+        ? nearby == 1
+              ? 'Одно устройство рядом'
+              : 'Устройств рядом: $nearby'
+        : controller.relayReady
         ? 'Relay подключён'
         : 'Локальная очередь';
-    final subtitle = controller.relayReady
+    final subtitle = nearby > 0
+        ? 'Сообщения контактам рядом идут напрямую по локальной Wi-Fi-сети.'
+        : controller.relayReady
         ? 'Зашифрованные пакеты отправляются и принимаются.'
         : controller.relayConfigured
         ? 'Relay недоступен; сообщения дождутся подключения.'
-        : 'Пакеты шифруются и ждут настройки RELAY_URL.';
+        : controller.nearbyReady
+        ? 'Ищем знакомые устройства в локальной сети.'
+        : 'Пакеты шифруются и сохраняются до появления транспорта.';
     return Container(
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.08),
@@ -452,7 +461,7 @@ class _TransportBanner extends StatelessWidget {
                 ],
               ),
             ),
-            const Icon(Icons.lock_outline),
+            Icon(nearby > 0 ? Icons.wifi_tethering : Icons.lock_outline),
           ],
         ),
       ),

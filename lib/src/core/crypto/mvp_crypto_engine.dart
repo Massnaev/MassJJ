@@ -68,6 +68,9 @@ class MvpCryptoEngine implements CryptoEngine {
     required AnonymousIdentity recipient,
     required Contact sender,
   }) async {
+    if (packet.cryptoSuite != suite) {
+      throw UnsupportedError('Unsupported crypto suite: ${packet.cryptoSuite}');
+    }
     final secretKey = await _deriveKey(
       privateSeed: recipient.privateSeed,
       remotePublicKey: sender.publicKey,

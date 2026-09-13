@@ -1,4 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:p2p_messenger/src/core/crypto/mvp_crypto_engine.dart';
+import 'package:p2p_messenger/src/core/identity/anonymous_identity.dart';
 import 'package:p2p_messenger/src/core/messaging/encrypted_packet.dart';
 
 void main() {
@@ -37,6 +39,43 @@ void main() {
     expect(
       () => EncryptedPacket.fromJson({'v': 99}),
       throwsA(isA<FormatException>()),
+    );
+  });
+
+  test('MVP engine refuses a packet from another crypto suite', () async {
+    final engine = MvpCryptoEngine();
+    final packet = EncryptedPacket(
+      cryptoSuite: 'future-ratchet-v1',
+      messageId: 'message-suite-test',
+      senderId: 'sender-id',
+      recipientId: 'recipient-id',
+      createdAt: DateTime.utc(2026, 9, 13),
+      expiresAt: DateTime.utc(2026, 9, 14),
+      hopLimit: 8,
+      nonce: const [1],
+      cipherText: const [2],
+      mac: const [3],
+    );
+    const recipient = AnonymousIdentity(
+      userId: 'recipient-id',
+      displayName: 'Recipient',
+      publicKey: [],
+      privateSeed: [],
+      fingerprint: '',
+      inboxReadToken: '',
+      inboxWriteToken: '',
+    );
+    const sender = Contact(
+      userId: 'sender-id',
+      displayName: 'Sender',
+      publicKey: [],
+      fingerprint: '',
+      inboxWriteToken: '',
+    );
+
+    await expectLater(
+      engine.decrypt(packet: packet, recipient: recipient, sender: sender),
+      throwsA(isA<UnsupportedError>()),
     );
   });
 }

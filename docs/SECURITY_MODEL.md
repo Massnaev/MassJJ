@@ -38,6 +38,18 @@ recipient routing identifiers, and approximate packet sizes. Nearby peers can
 observe physical proximity. Padding, opaque mailbox capabilities, relay rotation,
 and optional relay-only mode belong to later threat-model work.
 
+LAN discovery uses directed, per-contact tags that rotate once per minute and
+accept a one-bucket clock skew. Advertisements contain a random service name,
+protocol version, port, and at most 64 tags, but no account ID or display name.
+The HTTP carrier is not confidential: local observers can still see device IPs,
+ports, timing, and ciphertext sizes. Message bodies remain AEAD-encrypted, and
+the receiver accepts a delivery only after authenticated decryption. The
+long-lived relay write capability is deliberately not exposed on the LAN.
+
+This does not prevent traffic analysis, active port scanning, denial of service,
+or tag prediction after compromise of a static identity key. It also provides no
+Internet-scale anonymity and no protection from a compromised endpoint.
+
 ## Shipping gate
 
 Do not describe this build as secure or anonymous in a public release. Required
