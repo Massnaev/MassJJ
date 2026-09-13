@@ -61,6 +61,15 @@ Test the relay:
 node --test server/test/*.test.mjs
 ```
 
+Run the cross-runtime encrypted exchange tests. They start the real Node relay
+on a random local port and verify both the low-level encrypted packet contract
+and the complete two-`AppController` send, receive, persist, and acknowledge
+path:
+
+```powershell
+flutter test e2e/relay_e2e_test.dart
+```
+
 Android builds require the Android SDK. iOS builds must be signed and compiled
 on macOS with Xcode, even though the shared Dart code can be developed here.
 

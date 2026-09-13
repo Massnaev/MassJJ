@@ -250,6 +250,8 @@ if (isMain) {
   const storageFile = process.env.RELAY_STORAGE ?? './data/relay.json';
   const server = createRelayServer({ storageFile });
   server.listen(port, host, () => {
-    console.log(`Relay listening on http://${host}:${port}`);
+    const address = server.address();
+    const actualPort = typeof address === 'object' && address ? address.port : port;
+    console.log(`Relay listening on http://${host}:${actualPort}`);
   });
 }

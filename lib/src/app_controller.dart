@@ -78,6 +78,8 @@ class AppController extends ChangeNotifier {
     return null;
   }
 
+  Future<void> synchronize() => _syncRelay();
+
   Future<void> _syncRelay() async {
     final relay = _relayTransport;
     if (relay == null || _syncing) return;
@@ -151,6 +153,7 @@ class AppController extends ChangeNotifier {
   @override
   void dispose() {
     _pollTimer?.cancel();
+    _relayTransport?.close(force: true);
     super.dispose();
   }
 

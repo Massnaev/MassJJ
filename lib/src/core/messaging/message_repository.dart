@@ -6,7 +6,7 @@ import 'encrypted_packet.dart';
 class MessageRepository {
   MessageRepository(this._vault);
 
-  final LocalVault _vault;
+  final JsonVault _vault;
 
   Future<List<Contact>> loadContacts() async {
     final data = await _vault.readJson('contacts.v1');

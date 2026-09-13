@@ -120,6 +120,11 @@ class RelayTransport implements DeliveryTransport {
     }
   }
 
+  void close({bool force = false}) {
+    _client.close(force: force);
+    _state = TransportState.unavailable;
+  }
+
   Future<_RelayResponse> _jsonRequest({
     required String method,
     required String path,
