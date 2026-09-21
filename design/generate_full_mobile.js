@@ -214,7 +214,7 @@ function componentsBoard(){
 
 out.push(`<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">`); gradientDefs();
 rect(0,0,W,H,C.canvas,36); circle(1990,120,250,C.violet, '',1); out.push('<circle cx="1990" cy="120" r="250" fill="#7C5CFF" opacity=".18" filter="url(#soft)"/>');
-txt(70,68,'P2P MESSENGER · MOBILE PRODUCT DESIGN',11,C.violet2,800,'start',1,1.5);txt(70,112,'Полный мобильный flow',34,C.text,800);txt(2120,92,'14 экранов · RU · 390 × 844',12,C.muted,600,'end');
+txt(70,68,'MASSJJ · MOBILE PRODUCT DESIGN',11,C.violet2,800,'start',1,1.5);txt(70,112,'Полный мобильный flow',34,C.text,800);txt(2120,92,'14 экранов · RU · 390 × 844',12,C.muted,600,'end');
 componentsBoard();
 
 const xs=[70,600,1130,1660], ys=[570,1500,2430,3360];
@@ -230,7 +230,7 @@ const nodes=[['Onboarding',1730,3630],['Chats',1900,3630],['Dialog',1900,3725],[
 path('M1785 3630H1845M1900 3650V3705M1845 3725H1785M1785 3745l30 45M1845 3790l30-45M1870 3810h60',C.violet2,1.5);
 txt(1855,3900,'Smart Animate · 220–320ms · без bounce',10,C.muted,600,'middle');
 txt(70,4318,'DELIVERY NOTE',9,C.violet2,800,'start',1,1);txt(70,4342,'Основной маршрут: LAN → relay → encrypted outbox. Recovery-код никогда не попадает в invite.',11,C.muted,500);
-txt(2120,4342,'P2P Messenger / Mobile v1 / 2026',10,C.faint,600,'end');
+txt(2120,4342,'MassJJ / Mobile v1 / 2026',10,C.faint,600,'end');
 out.push('</svg>');
 
 fs.writeFileSync(require('path').join(__dirname,'full-mobile-app.svg'), out.join(''), 'utf8');

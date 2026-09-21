@@ -74,7 +74,7 @@ class _InviteQr extends StatelessWidget {
             size: 228,
             padding: const EdgeInsets.all(10),
             backgroundColor: Colors.white,
-            semanticsLabel: 'QR-код приглашения в P2P Messenger',
+            semanticsLabel: 'QR-код приглашения в MassJJ',
             errorStateBuilder: (context, _) => const ColoredBox(
               color: Colors.white,
               child: Center(

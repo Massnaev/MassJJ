@@ -1,10 +1,12 @@
 import 'dart:io';
+import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../app_controller.dart';
 import '../core/identity/anonymous_identity.dart';
+import '../core/messaging/chat_message.dart';
 import 'add_contact_screen.dart';
 import 'chat_screen.dart';
 import 'invite_code_panel.dart';
@@ -261,6 +263,14 @@ class _ChatsPageState extends State<_ChatsPage> {
             ),
           ),
           const SizedBox(height: 12),
+          if (widget.controller.contacts.isNotEmpty) ...[
+            _NearbyStrip(
+              controller: widget.controller,
+              onOpen: widget.onOpen,
+              onAddContact: widget.onAddContact,
+            ),
+            const SizedBox(height: 14),
+          ],
           _TransportBanner(controller: widget.controller),
           const SizedBox(height: 16),
           Expanded(
@@ -289,9 +299,12 @@ class _ChatsPageState extends State<_ChatsPage> {
                       final last = widget.controller.lastMessageFor(
                         contact.userId,
                       );
-                      return _ContactTile(
+                      return _ChatGlassTile(
                         contact: contact,
-                        trailing: last == null ? 'Новый контакт' : last.body,
+                        message: last,
+                        nearby: widget.controller.isContactNearby(
+                          contact.userId,
+                        ),
                         onTap: () => widget.onOpen(contact),
                       );
                     },
@@ -481,6 +494,350 @@ class _ProfilePageState extends State<_ProfilePage> {
     ScaffoldMessenger.of(
       context,
     ).showSnackBar(SnackBar(content: Text(confirmation)));
+  }
+}
+
+class _NearbyStrip extends StatelessWidget {
+  const _NearbyStrip({
+    required this.controller,
+    required this.onOpen,
+    required this.onAddContact,
+  });
+
+  final AppController controller;
+  final ValueChanged<Contact> onOpen;
+  final VoidCallback onAddContact;
+
+  @override
+  Widget build(BuildContext context) {
+    final contacts = controller.contacts.take(4).toList();
+    return SizedBox(
+      height: 90,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'БЫСТРЫЙ ДОСТУП',
+            style: Theme.of(context).textTheme.labelMedium?.copyWith(
+              color: AppColors.muted,
+              fontSize: 10,
+              letterSpacing: 1.1,
+            ),
+          ),
+          const SizedBox(height: 9),
+          Expanded(
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              itemCount: contacts.length + 1,
+              separatorBuilder: (_, _) => const SizedBox(width: 10),
+              itemBuilder: (context, index) {
+                if (index == contacts.length) {
+                  return _QuickContact(
+                    label: 'Добавить',
+                    icon: Icons.add_rounded,
+                    onTap: onAddContact,
+                  );
+                }
+                final contact = contacts[index];
+                return _QuickContact(
+                  label: contact.displayName.split(' ').first,
+                  initial: contact.displayName.characters.first.toUpperCase(),
+                  online: controller.isContactNearby(contact.userId),
+                  color: _avatarColor(index),
+                  onTap: () => onOpen(contact),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Color _avatarColor(int index) => const [
+    AppColors.accentDeep,
+    Color(0xFF2E708F),
+    Color(0xFF9B5E49),
+    Color(0xFF3F7657),
+  ][index % 4];
+}
+
+class _QuickContact extends StatelessWidget {
+  const _QuickContact({
+    required this.label,
+    required this.onTap,
+    this.initial,
+    this.icon,
+    this.online = false,
+    this.color = AppColors.interactive,
+  });
+
+  final String label;
+  final VoidCallback onTap;
+  final String? initial;
+  final IconData? icon;
+  final bool online;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(14),
+      child: SizedBox(
+        width: 58,
+        child: Column(
+          children: [
+            Stack(
+              clipBehavior: Clip.none,
+              children: [
+                Container(
+                  width: 46,
+                  height: 46,
+                  decoration: BoxDecoration(
+                    color: color,
+                    borderRadius: BorderRadius.circular(15),
+                    border: Border.all(color: AppColors.line),
+                  ),
+                  alignment: Alignment.center,
+                  child: icon != null
+                      ? Icon(icon, size: 20, color: AppColors.muted)
+                      : Text(
+                          initial!,
+                          style: const TextStyle(fontWeight: FontWeight.w800),
+                        ),
+                ),
+                if (online)
+                  Positioned(
+                    right: -1,
+                    bottom: -1,
+                    child: Container(
+                      width: 12,
+                      height: 12,
+                      decoration: BoxDecoration(
+                        color: AppColors.success,
+                        shape: BoxShape.circle,
+                        border: Border.all(color: AppColors.canvas, width: 2),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 5),
+            Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(fontSize: 10),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ChatGlassTile extends StatelessWidget {
+  const _ChatGlassTile({
+    required this.contact,
+    required this.message,
+    required this.nearby,
+    required this.onTap,
+  });
+
+  final Contact contact;
+  final ChatMessage? message;
+  final bool nearby;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final accent = message?.status == MessageStatus.queued
+        ? AppColors.queued
+        : nearby
+        ? AppColors.success
+        : AppColors.accentSoft;
+    final avatarColor = _avatarColor(contact.displayName);
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Colors.white.withValues(alpha: 0.20),
+            accent.withValues(alpha: 0.24),
+            AppColors.line.withValues(alpha: 0.70),
+          ],
+          stops: const [0, 0.42, 1],
+        ),
+        borderRadius: BorderRadius.circular(19),
+        boxShadow: [
+          BoxShadow(
+            color: accent.withValues(alpha: 0.07),
+            blurRadius: 18,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(1),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(18),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
+            child: Material(
+              color: AppColors.raised.withValues(alpha: 0.90),
+              child: InkWell(
+                onTap: onTap,
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(13, 12, 12, 12),
+                  child: Row(
+                    children: [
+                      Stack(
+                        clipBehavior: Clip.none,
+                        children: [
+                          Container(
+                            width: 48,
+                            height: 48,
+                            decoration: BoxDecoration(
+                              color: avatarColor,
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            alignment: Alignment.center,
+                            child: Text(
+                              contact.displayName.characters.first
+                                  .toUpperCase(),
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
+                          ),
+                          if (nearby)
+                            Positioned(
+                              right: -2,
+                              bottom: -2,
+                              child: Container(
+                                width: 13,
+                                height: 13,
+                                decoration: BoxDecoration(
+                                  color: AppColors.success,
+                                  shape: BoxShape.circle,
+                                  border: Border.all(
+                                    color: AppColors.raised,
+                                    width: 2,
+                                  ),
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                      const SizedBox(width: 13),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    contact.displayName,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+                                ),
+                                if (message != null)
+                                  Text(
+                                    _time(message!.createdAt),
+                                    style: Theme.of(context).textTheme.bodySmall
+                                        ?.copyWith(
+                                          color: AppColors.faint,
+                                          fontFeatures: const [
+                                            FontFeature.tabularFigures(),
+                                          ],
+                                        ),
+                                  ),
+                              ],
+                            ),
+                            const SizedBox(height: 4),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    message?.body ?? 'Новый контакт',
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: Theme.of(
+                                      context,
+                                    ).textTheme.bodySmall,
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                _MessageStatusMark(message: message),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  String _time(DateTime value) {
+    final local = value.toLocal();
+    return '${local.hour.toString().padLeft(2, '0')}:'
+        '${local.minute.toString().padLeft(2, '0')}';
+  }
+
+  Color _avatarColor(String value) {
+    final index = value.codeUnits.fold<int>(0, (sum, item) => sum + item) % 4;
+    return const [
+      AppColors.accentDeep,
+      Color(0xFF2E708F),
+      Color(0xFF9B5E49),
+      Color(0xFF3F7657),
+    ][index];
+  }
+}
+
+class _MessageStatusMark extends StatelessWidget {
+  const _MessageStatusMark({required this.message});
+
+  final ChatMessage? message;
+
+  @override
+  Widget build(BuildContext context) {
+    final value = message;
+    if (value == null || value.direction == MessageDirection.incoming) {
+      return const Icon(
+        Icons.chevron_right_rounded,
+        size: 18,
+        color: AppColors.faint,
+      );
+    }
+    final (icon, color) = switch (value.status) {
+      MessageStatus.encrypting => (
+        Icons.lock_clock_outlined,
+        AppColors.accentSoft,
+      ),
+      MessageStatus.queued => (Icons.schedule_rounded, AppColors.queued),
+      MessageStatus.sent => (Icons.check_rounded, AppColors.accentSoft),
+      MessageStatus.delivered => (Icons.done_all_rounded, AppColors.accentSoft),
+      MessageStatus.failed => (Icons.error_outline_rounded, AppColors.error),
+    };
+    return Icon(icon, size: 17, color: color);
   }
 }
 

@@ -1,4 +1,4 @@
-# P2P Messenger MVP
+# MassJJ MVP
 
 Anonymous Flutter messenger foundation for Android, iOS, and Windows. Accounts
 are local identities: no phone number, email address, or password-reset service.

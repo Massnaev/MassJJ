@@ -13,7 +13,7 @@
   </defs>
   <rect width="2680" height="1260" rx="36" fill="url(#bg)"/>
   <circle cx="2440" cy="80" r="190" fill="#7C5CFF" opacity=".18" filter="url(#glow)"/>
-  <text x="64" y="70" class="font label">P2P MESSENGER · PRODUCT DESIGN</text>
+  <text x="64" y="70" class="font label">MASSJJ · PRODUCT DESIGN</text>
   <text x="64" y="116" class="font title" font-size="36">Приватный мессенджер, понятный без обучения</text>
   <text x="64" y="148" class="font muted" font-size="14">Mobile-first · responsive desktop · transparent delivery states · calm motion</text>
 

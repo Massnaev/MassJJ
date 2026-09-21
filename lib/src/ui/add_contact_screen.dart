@@ -339,7 +339,7 @@ class _AddContactScreenState extends State<AddContactScreen> {
       final value = barcode.rawValue?.trim();
       if (value == null || value.isEmpty) continue;
       if (!value.startsWith('p2p1.')) {
-        setState(() => _error = 'Это не QR-приглашение P2P Messenger.');
+        setState(() => _error = 'Это не QR-приглашение MassJJ.');
         continue;
       }
       unawaited(_submit(value));

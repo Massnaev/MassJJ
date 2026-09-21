@@ -386,7 +386,7 @@ class _Brand extends StatelessWidget {
         _MiniMark(),
         SizedBox(width: 10),
         Text(
-          'P2P MESSENGER',
+          'MASSJJ',
           style: TextStyle(
             fontSize: 12,
             fontWeight: FontWeight.w800,

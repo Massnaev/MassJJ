@@ -92,7 +92,7 @@ class _P2PMessengerAppState extends State<P2PMessengerApp> {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'P2P Messenger',
+      title: 'MassJJ',
       theme: buildAppTheme(),
       home: _home(),
     );

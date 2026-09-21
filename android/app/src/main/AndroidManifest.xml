@@ -3,7 +3,7 @@
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-feature android:name="android.hardware.camera" android:required="false" />
     <application
-        android:label="P2P Messenger"
+        android:label="MassJJ"
         android:name="${applicationName}"
         android:icon="@drawable/ic_launcher"
         android:roundIcon="@drawable/ic_launcher">
