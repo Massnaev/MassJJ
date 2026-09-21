@@ -1,0 +1,111 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2680" height="1260" viewBox="0 0 2680 1260">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#0B0B0F"/><stop offset="1" stop-color="#12121A"/></linearGradient>
+    <linearGradient id="violet" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#9A83FF"/><stop offset="1" stop-color="#6747F5"/></linearGradient>
+    <linearGradient id="avatar1" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#FF7B9C"/><stop offset="1" stop-color="#7C5CFF"/></linearGradient>
+    <linearGradient id="avatar2" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#3ED6A3"/><stop offset="1" stop-color="#4C82FF"/></linearGradient>
+    <linearGradient id="avatar3" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#FFBC66"/><stop offset="1" stop-color="#F06A7A"/></linearGradient>
+    <filter id="shadow" x="-30%" y="-30%" width="160%" height="180%"><feDropShadow dx="0" dy="18" stdDeviation="24" flood-color="#000" flood-opacity=".48"/></filter>
+    <filter id="glow" x="-70%" y="-70%" width="240%" height="240%"><feGaussianBlur stdDeviation="22"/></filter>
+    <style>
+      .font{font-family:Manrope,Inter,Arial,sans-serif}.title{font-size:28px;font-weight:700;fill:#F5F4FA}.h2{font-size:18px;font-weight:700;fill:#F5F4FA}.body{font-size:14px;font-weight:400;fill:#F5F4FA}.muted{font-size:12px;font-weight:400;fill:#8D8C9C}.label{font-size:11px;font-weight:600;letter-spacing:.6px;fill:#A88FFF}.tiny{font-size:10px;font-weight:500;fill:#7B7A8C}.stroke{stroke:#FFFFFF14;stroke-width:1}.icon{fill:none;stroke:#B9B8C7;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+    </style>
+  </defs>
+  <rect width="2680" height="1260" rx="36" fill="url(#bg)"/>
+  <circle cx="2440" cy="80" r="190" fill="#7C5CFF" opacity=".18" filter="url(#glow)"/>
+  <text x="64" y="70" class="font label">P2P MESSENGER · PRODUCT DESIGN</text>
+  <text x="64" y="116" class="font title" font-size="36">Приватный мессенджер, понятный без обучения</text>
+  <text x="64" y="148" class="font muted" font-size="14">Mobile-first · responsive desktop · transparent delivery states · calm motion</text>
+
+  <!-- MOBILE 1: CHATS -->
+  <text x="64" y="210" class="font label">01 · CHATS</text>
+  <g transform="translate(64 232)" filter="url(#shadow)">
+    <rect width="390" height="844" rx="44" fill="#121217" stroke="#FFFFFF1F"/>
+    <rect x="138" y="14" width="114" height="30" rx="15" fill="#050507"/>
+    <text x="24" y="36" class="font tiny" fill="#F5F4FA">9:41</text>
+    <g transform="translate(326 24)" class="icon"><path d="M0 8h3M5 6h3M10 3h3"/><path d="M18 6c4-4 8-4 12 0M21 9c2-2 4-2 6 0"/><rect x="34" y="1" width="16" height="9" rx="2"/><path d="M51 4v3"/></g>
+    <circle cx="44" cy="86" r="18" fill="url(#violet)"/><text x="44" y="91" text-anchor="middle" class="font body" font-weight="700">N</text>
+    <text x="76" y="82" class="font title">Чаты</text><text x="76" y="101" class="font tiny">защищено · relay online</text>
+    <circle cx="346" cy="86" r="20" fill="#24242E"/><path d="M346 78v16M338 86h16" class="icon"/>
+    <rect x="20" y="126" width="350" height="46" rx="14" fill="#1A1A22" class="stroke"/><circle cx="42" cy="149" r="7" class="icon"/><path d="M47 154l6 6" class="icon"/><text x="64" y="154" class="font muted">Поиск по чатам</text>
+    <text x="20" y="202" class="font label">БЫСТРЫЙ ДОСТУП</text>
+    <g transform="translate(20 217)"><circle cx="28" cy="28" r="26" fill="url(#avatar1)"/><text x="28" y="34" text-anchor="middle" class="font body" font-weight="700">МК</text><circle cx="47" cy="47" r="5" fill="#34D47B" stroke="#121217" stroke-width="3"/><text x="28" y="70" text-anchor="middle" class="font tiny">Маша</text></g>
+    <g transform="translate(92 217)"><circle cx="28" cy="28" r="26" fill="url(#avatar2)"/><text x="28" y="34" text-anchor="middle" class="font body" font-weight="700">АК</text><circle cx="47" cy="47" r="5" fill="#34D47B" stroke="#121217" stroke-width="3"/><text x="28" y="70" text-anchor="middle" class="font tiny">Антон</text></g>
+    <g transform="translate(164 217)"><circle cx="28" cy="28" r="26" fill="url(#avatar3)"/><text x="28" y="34" text-anchor="middle" class="font body" font-weight="700">Л</text><circle cx="47" cy="47" r="5" fill="#F4B24B" stroke="#121217" stroke-width="3"/><text x="28" y="70" text-anchor="middle" class="font tiny">Лена</text></g>
+    <g transform="translate(236 217)"><circle cx="28" cy="28" r="26" fill="#24242E"/><path d="M18 28h20M28 18v20" class="icon"/><text x="28" y="70" text-anchor="middle" class="font tiny">Добавить</text></g>
+    <line x1="20" y1="306" x2="370" y2="306" stroke="#FFFFFF14"/>
+
+    <g transform="translate(20 326)"><circle cx="28" cy="28" r="26" fill="url(#avatar1)"/><text x="28" y="34" text-anchor="middle" class="font body" font-weight="700">МК</text><circle cx="47" cy="47" r="5" fill="#34D47B" stroke="#121217" stroke-width="3"/><text x="70" y="20" class="font h2" font-size="15">Маша К.</text><text x="70" y="42" class="font muted">Отправила фото · только что</text><text x="350" y="18" text-anchor="end" class="font tiny">14:32</text><circle cx="338" cy="42" r="11" fill="#7C5CFF"/><text x="338" y="46" text-anchor="middle" class="font tiny" fill="#fff">2</text></g>
+    <g transform="translate(20 398)"><circle cx="28" cy="28" r="26" fill="url(#avatar2)"/><text x="28" y="34" text-anchor="middle" class="font body" font-weight="700">АК</text><text x="70" y="20" class="font h2" font-size="15">Антон К.</text><text x="70" y="42" class="font muted">Увидимся вечером?</text><text x="350" y="18" text-anchor="end" class="font tiny">13:47</text><path d="M330 39l4 4 8-9M337 39l4 4 8-9" stroke="#A88FFF" stroke-width="1.5" fill="none"/></g>
+    <g transform="translate(20 470)"><circle cx="28" cy="28" r="26" fill="url(#avatar3)"/><text x="28" y="34" text-anchor="middle" class="font body" font-weight="700">Л</text><text x="70" y="20" class="font h2" font-size="15">Лена</text><text x="70" y="42" class="font muted">Сообщение ждёт сеть</text><text x="350" y="18" text-anchor="end" class="font tiny">12:03</text><circle cx="338" cy="42" r="5" fill="none" stroke="#F4B24B" stroke-width="1.5"/><path d="M338 39v4l3 2" stroke="#F4B24B" stroke-width="1.5" fill="none"/></g>
+    <g transform="translate(20 542)"><circle cx="28" cy="28" r="26" fill="#2B2B39"/><text x="28" y="34" text-anchor="middle" class="font body" font-weight="700">Т</text><text x="70" y="20" class="font h2" font-size="15">Тестовая группа</text><text x="70" y="42" class="font muted">5 участников · relay</text><text x="350" y="18" text-anchor="end" class="font tiny">вчера</text></g>
+    <g transform="translate(20 618)"><rect width="350" height="54" rx="16" fill="#1A1A22"/><circle cx="20" cy="27" r="4" fill="#34D47B"/><text x="34" y="23" class="font tiny">Сеть доступна</text><text x="34" y="39" class="font tiny" fill="#B9B8C7">LAN + relay · очередь пуста</text><path d="M316 28h14M323 21v14" class="icon"/></g>
+    <g transform="translate(20 760)"><rect width="350" height="64" rx="22" fill="#1A1A22" stroke="#FFFFFF1F"/><g transform="translate(52 17)"><rect width="64" height="30" rx="15" fill="#7C5CFF2E"/><path d="M24 20c0-5 4-9 8-9s8 4 8 9v5H24z" fill="#A88FFF"/><text x="32" y="50" text-anchor="middle" class="font tiny" fill="#A88FFF">Чаты</text></g><g transform="translate(143 17)"><circle cx="32" cy="15" r="7" class="icon"/><path d="M20 29c4-7 20-7 24 0" class="icon"/><text x="32" y="50" text-anchor="middle" class="font tiny">Контакты</text></g><g transform="translate(236 17)"><circle cx="32" cy="15" r="8" class="icon"/><path d="M22 31c3-7 17-7 20 0" class="icon"/><text x="32" y="50" text-anchor="middle" class="font tiny">Профиль</text></g></g>
+  </g>
+
+  <!-- MOBILE 2: CONVERSATION -->
+  <text x="504" y="210" class="font label">02 · CONVERSATION</text>
+  <g transform="translate(504 232)" filter="url(#shadow)">
+    <rect width="390" height="844" rx="44" fill="#121217" stroke="#FFFFFF1F"/>
+    <rect x="138" y="14" width="114" height="30" rx="15" fill="#050507"/><text x="24" y="36" class="font tiny" fill="#F5F4FA">9:41</text>
+    <path d="M34 82l-9 9 9 9M26 91h15" class="icon"/><circle cx="68" cy="91" r="22" fill="url(#avatar1)"/><text x="68" y="97" text-anchor="middle" class="font body" font-weight="700">МК</text><text x="102" y="86" class="font h2" font-size="15">Маша К.</text><circle cx="106" cy="102" r="4" fill="#34D47B"/><text x="116" y="106" class="font tiny">в сети</text><circle cx="346" cy="91" r="20" fill="#1A1A22"/><path d="M338 84l4-3 5 5-3 4 5 5 4-3 5 5-3 4c-9 0-21-12-21-21z" class="icon"/>
+    <rect x="116" y="132" width="158" height="26" rx="13" fill="#7C5CFF1F"/><path d="M131 142v6c0 4 5 6 7 7 2-1 7-3 7-7v-6l-7-3z" fill="none" stroke="#A88FFF" stroke-width="1.4"/><text x="153" y="150" class="font tiny" fill="#A88FFF">сквозное шифрование</text>
+    <text x="195" y="195" text-anchor="middle" class="font tiny">Сегодня</text>
+    <g transform="translate(20 224)"><rect width="246" height="72" rx="18" fill="#24242E"/><text x="16" y="26" class="font body">Привет! Ты уже проверил</text><text x="16" y="48" class="font body">новую сборку?</text><text x="224" y="62" text-anchor="end" class="font tiny">14:28</text></g>
+    <g transform="translate(114 314)"><rect width="256" height="94" rx="18" fill="#6747F5"/><text x="16" y="28" class="font body">Да. LAN обнаружение стало</text><text x="16" y="50" class="font body">заметно быстрее ✨</text><text x="226" y="80" text-anchor="end" class="font tiny" fill="#EEEAFE">14:30 ✓✓</text></g>
+    <g transform="translate(20 430)"><rect width="286" height="118" rx="18" fill="#24242E"/><rect x="12" y="12" width="262" height="58" rx="12" fill="#1A1A22"/><path d="M26 57l34-30 28 24 26-18 42 36" fill="none" stroke="#7C5CFF" stroke-width="2"/><circle cx="220" cy="34" r="8" fill="#F4B24B"/><text x="16" y="94" class="font body">Вот логи с телефона</text><text x="264" y="106" text-anchor="end" class="font tiny">14:31</text></g>
+    <g transform="translate(162 568)"><rect width="208" height="68" rx="18" fill="#6747F5"/><text x="16" y="28" class="font body">Смотрю, спасибо</text><circle cx="18" cy="50" r="5" fill="none" stroke="#F4B24B" stroke-width="1.5"/><path d="M18 47v4l3 2" stroke="#F4B24B" stroke-width="1.5" fill="none"/><text x="30" y="54" class="font tiny" fill="#F8D08C">ждёт сеть</text></g>
+    <g transform="translate(16 754)"><rect width="358" height="70" rx="23" fill="#1A1A22" stroke="#FFFFFF1F"/><circle cx="34" cy="35" r="19" fill="#24242E"/><path d="M28 35h12M34 29v12" class="icon"/><text x="66" y="40" class="font muted">Сообщение</text><path d="M278 28v10c0 8 12 8 12 0V28M274 41c0 14 20 14 20 0M284 52v6" class="icon"/><circle cx="328" cy="35" r="23" fill="url(#violet)"/><path d="M318 35l20-9-7 20-4-8z" fill="#fff"/></g>
+  </g>
+
+  <!-- MOBILE 3: IDENTITY -->
+  <text x="944" y="210" class="font label">03 · IDENTITY & INVITE</text>
+  <g transform="translate(944 232)" filter="url(#shadow)">
+    <rect width="390" height="844" rx="44" fill="#121217" stroke="#FFFFFF1F"/><rect x="138" y="14" width="114" height="30" rx="15" fill="#050507"/><text x="24" y="36" class="font tiny" fill="#F5F4FA">9:41</text>
+    <text x="24" y="92" class="font title">Профиль</text><circle cx="346" cy="84" r="20" fill="#24242E"/><path d="M346 76v16M338 84h16" class="icon"/>
+    <circle cx="195" cy="168" r="54" fill="url(#violet)"/><text x="195" y="180" text-anchor="middle" class="font title" font-size="34">N</text><circle cx="237" cy="206" r="9" fill="#34D47B" stroke="#121217" stroke-width="4"/>
+    <text x="195" y="244" text-anchor="middle" class="font h2" font-size="20">Nikita</text><text x="195" y="266" text-anchor="middle" class="font muted">локальная идентичность</text>
+    <g transform="translate(20 294)"><rect width="350" height="112" rx="20" fill="#1A1A22" stroke="#FFFFFF14"/><path d="M28 28v14c0 10 12 14 18 17 6-3 18-7 18-17V28l-18-8z" fill="#7C5CFF2E" stroke="#A88FFF"/><text x="82" y="36" class="font h2" font-size="15">Ключ сохранён на устройстве</text><text x="82" y="60" class="font muted">Фраза восстановления не покидает</text><text x="82" y="78" class="font muted">этот телефон без вашего действия.</text></g>
+    <g transform="translate(20 426)"><rect width="350" height="260" rx="24" fill="#F5F4FA"/><g fill="#121217"><rect x="34" y="34" width="54" height="54" rx="4"/><rect x="262" y="34" width="54" height="54" rx="4"/><rect x="34" y="172" width="54" height="54" rx="4"/><rect x="108" y="34" width="16" height="16"/><rect x="142" y="34" width="16" height="16"/><rect x="176" y="34" width="34" height="16"/><rect x="108" y="68" width="34" height="16"/><rect x="160" y="68" width="16" height="34"/><rect x="194" y="68" width="34" height="16"/><rect x="108" y="120" width="16" height="34"/><rect x="142" y="120" width="34" height="16"/><rect x="194" y="110" width="16" height="44"/><rect x="228" y="110" width="34" height="16"/><rect x="108" y="172" width="34" height="16"/><rect x="160" y="154" width="16" height="34"/><rect x="194" y="172" width="34" height="16"/><rect x="246" y="154" width="16" height="34"/><rect x="280" y="110" width="34" height="16"/><rect x="280" y="144" width="16" height="34"/><rect x="108" y="206" width="16" height="20"/><rect x="142" y="206" width="34" height="20"/><rect x="194" y="206" width="16" height="20"/><rect x="228" y="206" width="34" height="20"/><rect x="280" y="206" width="34" height="20"/></g><circle cx="175" cy="130" r="22" fill="#7C5CFF"/><text x="175" y="136" text-anchor="middle" class="font body" font-weight="700">N</text></g>
+    <g transform="translate(20 706)"><rect width="350" height="52" rx="16" fill="#7C5CFF"/><text x="175" y="32" text-anchor="middle" class="font body" font-weight="600">Поделиться приглашением</text></g>
+    <g transform="translate(20 770)"><rect width="350" height="46" rx="14" fill="#1A1A22"/><path d="M24 18h16v16H24zM28 22h8v8h-8z" fill="none" stroke="#B9B8C7"/><text x="58" y="29" class="font muted">p2p://invite/7f4a…91c2</text><text x="330" y="29" text-anchor="end" class="font tiny" fill="#A88FFF">КОПИРОВАТЬ</text></g>
+  </g>
+
+  <!-- DESKTOP -->
+  <text x="1390" y="210" class="font label">04 · RESPONSIVE DESKTOP</text>
+  <g transform="translate(1390 232)" filter="url(#shadow)">
+    <rect width="1226" height="844" rx="30" fill="#121217" stroke="#FFFFFF1F"/>
+    <rect x="18" y="18" width="250" height="808" rx="24" fill="#17171F" stroke="#FFFFFF14"/>
+    <circle cx="52" cy="54" r="18" fill="url(#violet)"/><text x="52" y="60" text-anchor="middle" class="font body" font-weight="700">N</text><text x="82" y="51" class="font body" font-weight="600">Nikita</text><text x="82" y="69" class="font tiny">P2P identity</text><circle cx="232" cy="54" r="16" fill="#24242E"/><path d="M232 47v14M225 54h14" class="icon"/>
+    <g transform="translate(34 98)"><rect width="218" height="48" rx="14" fill="#7C5CFF2E"/><path d="M18 17h20v14H24l-6 5z" fill="#A88FFF"/><text x="54" y="30" class="font body" font-weight="600">Чаты</text><rect x="174" y="13" width="28" height="22" rx="11" fill="#7C5CFF"/><text x="188" y="28" text-anchor="middle" class="font tiny" fill="#fff">4</text></g>
+    <g transform="translate(34 156)"><circle cx="24" cy="24" r="10" class="icon"/><path d="M10 44c4-12 24-12 28 0" class="icon"/><text x="54" y="30" class="font body">Контакты</text></g>
+    <g transform="translate(34 210)"><path d="M14 18h20v20H14zM18 22h12v12H18z" class="icon"/><text x="54" y="31" class="font body">Приглашения</text></g>
+    <text x="34" y="294" class="font label">СЕТЬ</text><g transform="translate(34 314)"><rect width="218" height="76" rx="16" fill="#1A1A22"/><circle cx="18" cy="22" r="5" fill="#34D47B"/><text x="32" y="26" class="font body" font-size="13">Онлайн</text><text x="18" y="49" class="font tiny">LAN + relay</text><text x="18" y="65" class="font tiny">0 в очереди</text></g>
+    <g transform="translate(34 720)"><rect width="218" height="88" rx="18" fill="#1A1A22"/><path d="M18 18v12c0 8 10 11 15 14 5-3 15-6 15-14V18l-15-7z" fill="#7C5CFF2E" stroke="#A88FFF"/><text x="62" y="28" class="font body" font-size="13">Ключи на устройстве</text><text x="62" y="48" class="font tiny">fingerprint 7F:4A…</text><text x="18" y="72" class="font tiny" fill="#A88FFF">Подробнее о безопасности →</text></g>
+
+    <rect x="286" y="18" width="360" height="808" rx="24" fill="#14141B" stroke="#FFFFFF14"/>
+    <text x="310" y="61" class="font title">Чаты</text><circle cx="604" cy="54" r="18" fill="#24242E"/><path d="M604 47v14M597 54h14" class="icon"/>
+    <rect x="310" y="84" width="312" height="42" rx="13" fill="#1A1A22"/><circle cx="330" cy="105" r="6" class="icon"/><path d="M334 109l5 5" class="icon"/><text x="350" y="110" class="font muted">Поиск</text>
+    <g transform="translate(302 150)"><rect width="328" height="76" rx="16" fill="#7C5CFF1F"/><circle cx="36" cy="38" r="25" fill="url(#avatar1)"/><text x="36" y="44" text-anchor="middle" class="font body" font-weight="700">МК</text><text x="76" y="29" class="font body" font-weight="600">Маша К.</text><text x="76" y="50" class="font muted">Вот логи с телефона</text><text x="306" y="26" text-anchor="end" class="font tiny">14:31</text><circle cx="302" cy="52" r="10" fill="#7C5CFF"/><text x="302" y="56" text-anchor="middle" class="font tiny" fill="#fff">2</text></g>
+    <g transform="translate(302 236)"><circle cx="36" cy="38" r="25" fill="url(#avatar2)"/><text x="36" y="44" text-anchor="middle" class="font body" font-weight="700">АК</text><text x="76" y="29" class="font body" font-weight="600">Антон К.</text><text x="76" y="50" class="font muted">Увидимся вечером?</text><text x="320" y="26" text-anchor="end" class="font tiny">13:47</text></g>
+    <g transform="translate(302 322)"><circle cx="36" cy="38" r="25" fill="url(#avatar3)"/><text x="36" y="44" text-anchor="middle" class="font body" font-weight="700">Л</text><text x="76" y="29" class="font body" font-weight="600">Лена</text><text x="76" y="50" class="font muted">Сообщение ждёт сеть</text><text x="320" y="26" text-anchor="end" class="font tiny">12:03</text><circle cx="309" cy="51" r="5" fill="none" stroke="#F4B24B"/></g>
+    <g transform="translate(302 408)"><circle cx="36" cy="38" r="25" fill="#2B2B39"/><text x="36" y="44" text-anchor="middle" class="font body" font-weight="700">Т</text><text x="76" y="29" class="font body" font-weight="600">Тестовая группа</text><text x="76" y="50" class="font muted">5 участников · relay</text><text x="320" y="26" text-anchor="end" class="font tiny">вчера</text></g>
+
+    <rect x="664" y="18" width="544" height="808" rx="24" fill="#17171F" stroke="#FFFFFF14"/>
+    <circle cx="704" cy="58" r="24" fill="url(#avatar1)"/><text x="704" y="64" text-anchor="middle" class="font body" font-weight="700">МК</text><text x="744" y="52" class="font h2" font-size="16">Маша К.</text><circle cx="748" cy="69" r="4" fill="#34D47B"/><text x="758" y="73" class="font tiny">в сети</text><circle cx="1158" cy="58" r="20" fill="#24242E"/><path d="M1150 52l4-3 5 5-3 4 5 5 4-3 5 5-3 4c-9 0-21-12-21-21z" class="icon"/>
+    <line x1="664" y1="98" x2="1208" y2="98" stroke="#FFFFFF14"/>
+    <g transform="translate(688 142)"><rect width="300" height="72" rx="18" fill="#24242E"/><text x="16" y="28" class="font body">Привет! Ты уже проверил новую сборку?</text><text x="278" y="58" text-anchor="end" class="font tiny">14:28</text></g>
+    <g transform="translate(868 236)"><rect width="316" height="92" rx="18" fill="#6747F5"/><text x="16" y="30" class="font body">Да. LAN обнаружение стало заметно</text><text x="16" y="52" class="font body">быстрее ✨</text><text x="292" y="76" text-anchor="end" class="font tiny" fill="#EEEAFE">14:30 ✓✓</text></g>
+    <g transform="translate(688 354)"><rect width="348" height="118" rx="18" fill="#24242E"/><rect x="12" y="12" width="324" height="58" rx="12" fill="#1A1A22"/><path d="M28 56l38-28 34 24 34-20 54 36" fill="none" stroke="#7C5CFF" stroke-width="2"/><circle cx="274" cy="34" r="8" fill="#F4B24B"/><text x="16" y="94" class="font body">Вот логи с телефона</text><text x="322" y="106" text-anchor="end" class="font tiny">14:31</text></g>
+    <g transform="translate(708 734)"><rect width="456" height="66" rx="22" fill="#1A1A22" stroke="#FFFFFF1F"/><circle cx="34" cy="33" r="18" fill="#24242E"/><path d="M28 33h12M34 27v12" class="icon"/><text x="66" y="38" class="font muted">Сообщение</text><path d="M374 27v10c0 8 12 8 12 0V27M370 40c0 14 20 14 20 0M380 51v6" class="icon"/><circle cx="424" cy="33" r="22" fill="url(#violet)"/><path d="M414 33l20-9-7 20-4-8z" fill="#fff"/></g>
+  </g>
+
+  <!-- MOTION NOTES -->
+  <g transform="translate(64 1130)">
+    <text x="0" y="0" class="font label">MOTION CONTRACT</text>
+    <g transform="translate(0 22)"><rect width="310" height="58" rx="16" fill="#17171F" stroke="#FFFFFF14"/><text x="16" y="24" class="font body" font-size="13">Navigation indicator</text><text x="16" y="43" class="font tiny">220 ms · 8 px · ease-out</text></g>
+    <g transform="translate(326 22)"><rect width="310" height="58" rx="16" fill="#17171F" stroke="#FFFFFF14"/><text x="16" y="24" class="font body" font-size="13">Message send</text><text x="16" y="43" class="font tiny">260 ms · opacity + y8 + scale .97</text></g>
+    <g transform="translate(652 22)"><rect width="310" height="58" rx="16" fill="#17171F" stroke="#FFFFFF14"/><text x="16" y="24" class="font body" font-size="13">Modal / sheet</text><text x="16" y="43" class="font tiny">320 ms · y16 · backdrop 40%</text></g>
+    <g transform="translate(978 22)"><rect width="310" height="58" rx="16" fill="#17171F" stroke="#FFFFFF14"/><text x="16" y="24" class="font body" font-size="13">Reduced motion</text><text x="16" y="43" class="font tiny">opacity only · ≤120 ms</text></g>
+  </g>
+</svg>
