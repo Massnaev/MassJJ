@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config>
+    <!--
+      Nearby peers are addressed by dynamic RFC1918 IP addresses, which cannot
+      be enumerated as Android domain-config entries. Message bodies remain
+      encrypted and authenticated by the application protocol. Internet relay
+      URLs are separately restricted to HTTPS in Dart.
+    -->
+    <base-config cleartextTrafficPermitted="true">
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </base-config>
+</network-security-config>

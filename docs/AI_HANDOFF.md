@@ -25,6 +25,8 @@ This document is the continuity source for any AI or human continuing MassJJ.
 - transport router: nearby LAN, optional relay, local outbox;
 - contact-scoped rotating mDNS discovery tags;
 - bounded nearby HTTP inbox with authenticated decryption before persistence;
+- Android network policy permits cleartext LAN HTTP for dynamic peer IPs while
+  message envelopes remain encrypted and authenticated end to end;
 - Node.js opaque relay with split read/write mailbox capabilities;
 - light Android UI with chats, contacts, conversation, invite, and profile screens;
 - 24 Flutter tests, golden screenshots, relay tests, and relay end-to-end coverage.
@@ -85,6 +87,11 @@ Additional release blockers:
 - no independent protocol audit has been performed;
 - no official relay deployment exists.
 
+The Android network security configuration currently permits cleartext at the
+platform level because dynamic LAN IP ranges cannot be expressed as Android
+domain rules. Keep all non-LAN endpoints HTTPS-only in application code and do
+not send plaintext secrets through the nearby HTTP transport.
+
 Do not hide these limitations in public messaging. See `SECURITY.md` and
 `docs/SECURITY_MODEL.md`.
 
@@ -103,4 +110,4 @@ Do not hide these limitations in public messaging. See `SECURITY.md` and
 | Date | Change | Verification |
 | --- | --- | --- |
 | 2026-09-21 | Prepared public repository metadata, AGPL licensing, contributor/security guidance, author support addresses, and mandatory AI continuity rules. | Secret screening and standard static security audit completed; existing Flutter/relay test results recorded above. |
-
+| 2026-09-21 | Enabled Android cleartext access required by the encrypted LAN transport and surfaced nearby startup failure in the transport banner. | `flutter analyze` clean; 24 Flutter tests passed; release APK built successfully (65.9 MB). |

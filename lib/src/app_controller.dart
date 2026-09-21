@@ -46,6 +46,7 @@ class AppController extends ChangeNotifier {
   Timer? _pollTimer;
   bool _syncing = false;
   bool _disposed = false;
+  String? nearbyError;
   final Set<String> _processingIncoming = {};
 
   bool get relayConfigured => _relayUrl.isNotEmpty;
@@ -73,7 +74,8 @@ class AppController extends ChangeNotifier {
       try {
         await runtime.start();
         _transportRouter.addTransport(runtime.transport);
-      } catch (_) {
+      } catch (error) {
+        nearbyError = error.toString();
         _nearbyRuntime = null;
       }
     }

@@ -1155,6 +1155,8 @@ class _TransportBanner extends StatelessWidget {
         ? 'Сообщения дождутся подключения'
         : controller.nearbyReady
         ? 'Ищем устройства в локальной сети'
+        : controller.nearbyError != null
+        ? 'Локальная сеть недоступна · перезапустите приложение'
         : 'Сообщения сохраняются на устройстве';
     return Container(
       decoration: BoxDecoration(
