@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../core/identity/anonymous_identity.dart';
+import 'theme.dart';
 
 enum _OnboardingStep { welcome, backup, restore }
 
@@ -42,35 +43,36 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         child: LayoutBuilder(
           builder: (context, constraints) {
             final wide = constraints.maxWidth >= 840;
-            final content = wide
-                ? Row(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      const Expanded(child: _Introduction()),
-                      const SizedBox(width: 48),
-                      Expanded(child: Center(child: _stepContent())),
-                    ],
-                  )
-                : Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      const _Introduction(compact: true),
-                      const SizedBox(height: 32),
-                      _stepContent(),
-                    ],
-                  );
+            if (wide) {
+              return Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 1120),
+                  child: Padding(
+                    padding: const EdgeInsets.all(40),
+                    child: Row(
+                      children: [
+                        const Expanded(child: _DesktopIntroduction()),
+                        const SizedBox(width: 72),
+                        Expanded(
+                          child: Align(
+                            alignment: Alignment.center,
+                            child: _panel(_stepContent()),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            }
             return SingleChildScrollView(
-              padding: EdgeInsets.symmetric(
-                horizontal: wide ? 48 : 24,
-                vertical: wide ? 40 : 28,
-              ),
+              padding: const EdgeInsets.fromLTRB(20, 18, 20, 28),
               child: Center(
                 child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 1080),
-                  child: SizedBox(
-                    height: wide ? constraints.maxHeight - 80 : null,
-                    child: content,
-                  ),
+                  constraints: const BoxConstraints(maxWidth: 470),
+                  child: _step == _OnboardingStep.welcome
+                      ? _welcome()
+                      : _panel(_stepContent()),
                 ),
               ),
             );
@@ -80,43 +82,70 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     );
   }
 
-  Widget _stepContent() {
-    return ConstrainedBox(
-      constraints: const BoxConstraints(maxWidth: 470),
-      child: Material(
-        color: Theme.of(context).colorScheme.surfaceContainerLowest,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-          side: BorderSide(color: Theme.of(context).dividerColor),
-        ),
-        clipBehavior: Clip.antiAlias,
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: AnimatedSwitcher(
-            duration: const Duration(milliseconds: 180),
-            child: switch (_step) {
-              _OnboardingStep.welcome => _welcome(),
-              _OnboardingStep.backup => _backup(),
-              _OnboardingStep.restore => _restore(),
-            },
-          ),
+  Widget _panel(Widget child) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        border: Border.all(color: AppColors.line),
+        borderRadius: BorderRadius.circular(22),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: AnimatedSwitcher(
+          duration: const Duration(milliseconds: 240),
+          switchInCurve: Curves.easeOutCubic,
+          switchOutCurve: Curves.easeInCubic,
+          child: child,
         ),
       ),
     );
   }
 
-  Widget _welcome() {
+  Widget _stepContent() => switch (_step) {
+    _OnboardingStep.welcome => _welcome(compact: true),
+    _OnboardingStep.backup => _backup(),
+    _OnboardingStep.restore => _restore(),
+  };
+
+  Widget _welcome({bool compact = false}) {
     return Column(
       key: const ValueKey('welcome'),
       crossAxisAlignment: CrossAxisAlignment.stretch,
       mainAxisSize: MainAxisSize.min,
       children: [
-        Text('Начнём', style: Theme.of(context).textTheme.headlineSmall),
-        const SizedBox(height: 8),
-        const Text(
-          'Приложение создаст ключи прямо на устройстве. Имя, телефон и почта не потребуются.',
+        if (!compact) ...[
+          const Align(alignment: Alignment.centerLeft, child: _Brand()),
+          const SizedBox(height: 38),
+        ],
+        const _HeroMark(),
+        SizedBox(height: compact ? 22 : 28),
+        Text(
+          'Связь без анкеты\nи центральной точки',
+          textAlign: TextAlign.center,
+          style: Theme.of(context).textTheme.headlineLarge,
         ),
-        const SizedBox(height: 24),
+        const SizedBox(height: 12),
+        Text(
+          'Ключи создаются на устройстве.\nТелефон и почта не нужны.',
+          textAlign: TextAlign.center,
+          style: Theme.of(context).textTheme.bodyMedium,
+        ),
+        const SizedBox(height: 28),
+        const _FeatureCard(
+          icon: Icons.verified_user_outlined,
+          label: 'Сквозное шифрование',
+        ),
+        const SizedBox(height: 10),
+        const _FeatureCard(
+          icon: Icons.wifi_tethering_outlined,
+          label: 'LAN, relay и offline outbox',
+        ),
+        const SizedBox(height: 10),
+        const _FeatureCard(
+          icon: Icons.person_outline_rounded,
+          label: 'Анонимная локальная личность',
+        ),
+        const SizedBox(height: 28),
         FilledButton.icon(
           key: const ValueKey('create-identity'),
           onPressed: _busy ? null : _createIdentity,
@@ -125,8 +154,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   dimension: 18,
                   child: CircularProgressIndicator(strokeWidth: 2),
                 )
-              : const Icon(Icons.add_moderator_outlined),
-          label: const Text('Создать новую личность'),
+              : const Icon(Icons.key_outlined, size: 20),
+          label: const Text('Создать личность'),
         ),
         const SizedBox(height: 10),
         OutlinedButton.icon(
@@ -136,14 +165,19 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   _step = _OnboardingStep.restore;
                   _error = null;
                 }),
-          icon: const Icon(Icons.settings_backup_restore),
+          icon: const Icon(Icons.settings_backup_restore_rounded, size: 20),
           label: const Text('Восстановить по коду'),
         ),
-        const SizedBox(height: 18),
-        const _SecurityNote(
-          icon: Icons.phonelink_lock_outlined,
-          text: 'Секретный ключ не отправляется на relay-сервер.',
-        ),
+        if (!compact) ...[
+          const SizedBox(height: 20),
+          Text(
+            'Продолжая, вы создаёте ключи только локально',
+            textAlign: TextAlign.center,
+            style: Theme.of(
+              context,
+            ).textTheme.bodySmall?.copyWith(color: AppColors.faint),
+          ),
+        ],
       ],
     );
   }
@@ -155,62 +189,65 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       mainAxisSize: MainAxisSize.min,
       children: [
-        Row(
-          children: [
-            Container(
-              width: 38,
-              height: 38,
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.primaryContainer,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: const Icon(Icons.key_outlined),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                'Сохраните код',
-                style: Theme.of(context).textTheme.headlineSmall,
-              ),
-            ),
-          ],
+        _StepHeader(
+          title: 'Сохраните код',
+          subtitle: 'Шаг 2 из 3',
+          onBack: () => setState(() => _step = _OnboardingStep.welcome),
         ),
-        const SizedBox(height: 12),
-        const Text(
-          'Это единственный способ вернуть эту личность после потери или замены устройства.',
+        const SizedBox(height: 22),
+        const _Notice(
+          icon: Icons.key_outlined,
+          text:
+              'Это единственный способ вернуть личность после потери устройства.',
         ),
-        const SizedBox(height: 18),
+        const SizedBox(height: 20),
+        Text(
+          'RECOVERY CODE',
+          style: Theme.of(context).textTheme.labelMedium?.copyWith(
+            color: AppColors.muted,
+            letterSpacing: 1.2,
+          ),
+        ),
+        const SizedBox(height: 8),
         Container(
-          padding: const EdgeInsets.all(14),
+          padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surfaceContainerHigh,
-            borderRadius: BorderRadius.circular(12),
+            color: AppColors.interactive,
+            borderRadius: BorderRadius.circular(14),
           ),
           child: SelectableText(
             identity.recoveryCode,
             key: const ValueKey('recovery-code'),
-            style: const TextStyle(fontFamily: 'monospace', height: 1.45),
+            style: const TextStyle(
+              fontFamily: 'monospace',
+              fontSize: 13,
+              height: 1.5,
+              color: AppColors.text,
+            ),
           ),
         ),
         const SizedBox(height: 10),
         OutlinedButton.icon(
           onPressed: () => _copyRecoveryCode(identity.recoveryCode),
-          icon: const Icon(Icons.copy_outlined),
+          icon: const Icon(Icons.copy_all_outlined, size: 19),
           label: const Text('Копировать код'),
         ),
-        const SizedBox(height: 14),
-        CheckboxListTile(
-          key: const ValueKey('confirm-backup'),
-          value: _savedRecoveryCode,
-          contentPadding: EdgeInsets.zero,
-          controlAffinity: ListTileControlAffinity.leading,
-          title: const Text('Я сохранил код в безопасном месте'),
-          subtitle: const Text('Не отправляйте его другим людям.'),
-          onChanged: (value) {
-            setState(() => _savedRecoveryCode = value ?? false);
-          },
+        const SizedBox(height: 12),
+        Material(
+          color: Colors.transparent,
+          child: CheckboxListTile(
+            key: const ValueKey('confirm-backup'),
+            value: _savedRecoveryCode,
+            contentPadding: EdgeInsets.zero,
+            controlAffinity: ListTileControlAffinity.leading,
+            title: const Text('Я сохранил код в безопасном месте'),
+            subtitle: const Text('И никому его не отправлю'),
+            onChanged: (value) {
+              setState(() => _savedRecoveryCode = value ?? false);
+            },
+          ),
         ),
-        const SizedBox(height: 10),
+        const SizedBox(height: 12),
         FilledButton(
           key: const ValueKey('finish-onboarding'),
           onPressed: !_savedRecoveryCode || _busy ? null : _finish,
@@ -231,11 +268,15 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       mainAxisSize: MainAxisSize.min,
       children: [
-        Text(
-          'Восстановление',
-          style: Theme.of(context).textTheme.headlineSmall,
+        _StepHeader(
+          title: 'Восстановление',
+          subtitle: 'Локальная личность',
+          onBack: () => setState(() {
+            _step = _OnboardingStep.welcome;
+            _error = null;
+          }),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 20),
         const Text(
           'Вставьте резервный код, который начинается с p2pr1. Он будет сохранён в защищённом хранилище этого устройства.',
         ),
@@ -243,15 +284,17 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         TextField(
           key: const ValueKey('restore-code'),
           controller: _recoveryController,
-          minLines: 4,
-          maxLines: 7,
+          minLines: 5,
+          maxLines: 8,
           autofocus: true,
           autocorrect: false,
           enableSuggestions: false,
+          style: const TextStyle(fontFamily: 'monospace', fontSize: 13),
           decoration: InputDecoration(
             labelText: 'Код восстановления',
             hintText: 'p2pr1.…',
             errorText: _error,
+            alignLabelWithHint: true,
           ),
           onChanged: (_) {
             if (_error != null) setState(() => _error = null);
@@ -267,16 +310,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   child: CircularProgressIndicator(strokeWidth: 2),
                 )
               : const Text('Восстановить личность'),
-        ),
-        const SizedBox(height: 8),
-        TextButton(
-          onPressed: _busy
-              ? null
-              : () => setState(() {
-                  _step = _OnboardingStep.welcome;
-                  _error = null;
-                }),
-          child: const Text('Назад'),
         ),
       ],
     );
@@ -342,10 +375,173 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 }
 
-class _Introduction extends StatelessWidget {
-  const _Introduction({this.compact = false});
+class _Brand extends StatelessWidget {
+  const _Brand();
 
-  final bool compact;
+  @override
+  Widget build(BuildContext context) {
+    return const Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        _MiniMark(),
+        SizedBox(width: 10),
+        Text(
+          'P2P MESSENGER',
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w800,
+            letterSpacing: 1.15,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _MiniMark extends StatelessWidget {
+  const _MiniMark();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 34,
+      height: 34,
+      decoration: BoxDecoration(
+        color: AppColors.accent,
+        borderRadius: BorderRadius.circular(11),
+      ),
+      child: const Icon(Icons.chat_bubble_outline_rounded, size: 18),
+    );
+  }
+}
+
+class _HeroMark extends StatelessWidget {
+  const _HeroMark();
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Container(
+        width: 76,
+        height: 76,
+        decoration: BoxDecoration(
+          color: AppColors.accent,
+          borderRadius: BorderRadius.circular(22),
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0x397C5CFF),
+              blurRadius: 38,
+              spreadRadius: 4,
+            ),
+          ],
+        ),
+        child: const Icon(Icons.chat_bubble_outline_rounded, size: 32),
+      ),
+    );
+  }
+}
+
+class _FeatureCard extends StatelessWidget {
+  const _FeatureCard({required this.icon, required this.label});
+
+  final IconData icon;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 52,
+      padding: const EdgeInsets.symmetric(horizontal: 15),
+      decoration: BoxDecoration(
+        color: AppColors.raised,
+        border: Border.all(color: AppColors.line),
+        borderRadius: BorderRadius.circular(15),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, size: 20, color: AppColors.accentSoft),
+          const SizedBox(width: 13),
+          Expanded(
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: Alignment.centerLeft,
+              child: Text(
+                label,
+                maxLines: 1,
+                style: const TextStyle(fontWeight: FontWeight.w700),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _StepHeader extends StatelessWidget {
+  const _StepHeader({
+    required this.title,
+    required this.subtitle,
+    required this.onBack,
+  });
+
+  final String title;
+  final String subtitle;
+  final VoidCallback onBack;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        IconButton(
+          onPressed: onBack,
+          tooltip: 'Назад',
+          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 18),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(title, style: Theme.of(context).textTheme.headlineSmall),
+              Text(subtitle, style: Theme.of(context).textTheme.bodySmall),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _Notice extends StatelessWidget {
+  const _Notice({required this.icon, required this.text});
+
+  final IconData icon;
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFF1D1827),
+        border: Border.all(color: AppColors.accentDeep),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, size: 21, color: AppColors.accentSoft),
+          const SizedBox(width: 12),
+          Expanded(child: Text(text)),
+        ],
+      ),
+    );
+  }
+}
+
+class _DesktopIntroduction extends StatelessWidget {
+  const _DesktopIntroduction();
 
   @override
   Widget build(BuildContext context) {
@@ -354,106 +550,17 @@ class _Introduction extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const _Brand(),
-        SizedBox(height: compact ? 28 : 48),
-        ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 520),
-          child: Text(
-            'Личность без анкеты.\nСообщения под вашим ключом.',
-            style: Theme.of(context).textTheme.displaySmall,
-          ),
+        const SizedBox(height: 48),
+        Text(
+          'Личность без анкеты.\nСообщения под вашим ключом.',
+          style: Theme.of(context).textTheme.displaySmall,
         ),
         const SizedBox(height: 18),
-        ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 500),
-          child: Text(
-            'P2P Messenger создаёт псевдоним и криптографические ключи локально. Для начала не нужны аккаунт, SIM-карта или адрес почты.',
-            style: Theme.of(context).textTheme.bodyLarge,
-          ),
-        ),
-        if (!compact) ...[
-          const SizedBox(height: 32),
-          const Wrap(
-            spacing: 24,
-            runSpacing: 12,
-            children: [
-              _Feature(icon: Icons.badge_outlined, label: 'Без регистрации'),
-              _Feature(icon: Icons.lock_outline, label: 'Ключи на устройстве'),
-              _Feature(
-                icon: Icons.sync_alt,
-                label: 'Relay без открытого текста',
-              ),
-            ],
-          ),
-        ],
-      ],
-    );
-  }
-}
-
-class _Brand extends StatelessWidget {
-  const _Brand();
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          width: 40,
-          height: 40,
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.primary,
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Icon(
-            Icons.hub_outlined,
-            color: Theme.of(context).colorScheme.onPrimary,
-          ),
-        ),
-        const SizedBox(width: 12),
-        const Text(
-          'P2P MESSENGER',
-          style: TextStyle(fontWeight: FontWeight.w800, letterSpacing: 1.1),
-        ),
-      ],
-    );
-  }
-}
-
-class _Feature extends StatelessWidget {
-  const _Feature({required this.icon, required this.label});
-
-  final IconData icon;
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(icon, size: 19, color: Theme.of(context).colorScheme.primary),
-        const SizedBox(width: 8),
-        Text(label, style: const TextStyle(fontWeight: FontWeight.w600)),
-      ],
-    );
-  }
-}
-
-class _SecurityNote extends StatelessWidget {
-  const _SecurityNote({required this.icon, required this.text});
-
-  final IconData icon;
-  final String text;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Icon(icon, size: 18, color: Theme.of(context).colorScheme.primary),
-        const SizedBox(width: 9),
-        Expanded(
-          child: Text(text, style: Theme.of(context).textTheme.bodySmall),
+        Text(
+          'Один спокойный интерфейс для прямой связи по LAN, через relay и будущей передачи зашифрованных пакетов без интернета.',
+          style: Theme.of(
+            context,
+          ).textTheme.bodyLarge?.copyWith(color: AppColors.muted),
         ),
       ],
     );

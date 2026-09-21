@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 
 import '../core/identity/anonymous_identity.dart';
+import 'theme.dart';
 
 enum _ContactEntryMode { camera, code }
 
@@ -55,7 +56,18 @@ class _AddContactScreenState extends State<AddContactScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Добавить контакт')),
+      appBar: AppBar(
+        title: const Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Добавить контакт'),
+            Text(
+              'Публичный ключ',
+              style: TextStyle(fontSize: 11, color: AppColors.muted),
+            ),
+          ],
+        ),
+      ),
       body: SafeArea(
         child: Center(
           child: ConstrainedBox(
@@ -68,14 +80,7 @@ class _AddContactScreenState extends State<AddContactScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      Text(
-                        'Обменяйтесь приглашениями',
-                        style: Theme.of(context).textTheme.headlineSmall,
-                      ),
-                      const SizedBox(height: 6),
-                      const Text(
-                        'Код содержит публичный ключ и право отправлять сообщения. Резервного кода в нём нет.',
-                      ),
+                      const _PublicCodeNotice(),
                       if (widget.cameraEnabled) ...[
                         const SizedBox(height: 16),
                         SegmentedButton<_ContactEntryMode>(
@@ -103,6 +108,10 @@ class _AddContactScreenState extends State<AddContactScreen> {
                 Expanded(
                   child: AnimatedSwitcher(
                     duration: const Duration(milliseconds: 180),
+                    layoutBuilder: (currentChild, previousChildren) => Stack(
+                      alignment: Alignment.topCenter,
+                      children: [...previousChildren, ?currentChild],
+                    ),
                     child: _mode == _ContactEntryMode.camera
                         ? _cameraView()
                         : _codeView(),
@@ -125,7 +134,7 @@ class _AddContactScreenState extends State<AddContactScreen> {
         children: [
           Expanded(
             child: ClipRRect(
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(24),
               child: Stack(
                 fit: StackFit.expand,
                 children: [
@@ -134,7 +143,7 @@ class _AddContactScreenState extends State<AddContactScreen> {
                     onDetect: _handleCapture,
                     tapToFocus: true,
                     placeholderBuilder: (_) => const ColoredBox(
-                      color: Color(0xFF17201C),
+                      color: AppColors.raised,
                       child: Center(
                         child: CircularProgressIndicator(color: Colors.white),
                       ),
@@ -152,8 +161,11 @@ class _AddContactScreenState extends State<AddContactScreen> {
                         width: 232,
                         height: 232,
                         decoration: BoxDecoration(
-                          border: Border.all(color: Colors.white, width: 2),
-                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: AppColors.accentSoft,
+                            width: 3,
+                          ),
+                          borderRadius: BorderRadius.circular(22),
                         ),
                       ),
                     ),
@@ -230,6 +242,7 @@ class _AddContactScreenState extends State<AddContactScreen> {
             autofocus: true,
             autocorrect: false,
             enableSuggestions: false,
+            style: const TextStyle(fontFamily: 'monospace', fontSize: 13),
             decoration: InputDecoration(
               labelText: 'Код приглашения',
               hintText: 'p2p1.…',
@@ -260,21 +273,29 @@ class _AddContactScreenState extends State<AddContactScreen> {
           ),
           if (!widget.cameraEnabled) ...[
             const SizedBox(height: 18),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Icon(
-                  Icons.desktop_windows_outlined,
-                  size: 19,
-                  color: Theme.of(context).colorScheme.primary,
-                ),
-                const SizedBox(width: 9),
-                const Expanded(
-                  child: Text(
-                    'На Windows вставьте текстовый код. Камерное сканирование доступно в мобильном приложении.',
+            Container(
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: AppColors.raised,
+                border: Border.all(color: AppColors.line),
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(
+                    Icons.desktop_windows_outlined,
+                    size: 19,
+                    color: AppColors.accentSoft,
                   ),
-                ),
-              ],
+                  const SizedBox(width: 9),
+                  const Expanded(
+                    child: Text(
+                      'На этом устройстве используйте текстовый код. На Android также доступно сканирование камерой.',
+                    ),
+                  ),
+                ],
+              ),
             ),
           ],
         ],
@@ -383,7 +404,7 @@ class _ScannerError extends StatelessWidget {
     final permissionDenied =
         error.errorCode == MobileScannerErrorCode.permissionDenied;
     return ColoredBox(
-      color: const Color(0xFF17201C),
+      color: AppColors.raised,
       child: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 360),
@@ -394,7 +415,7 @@ class _ScannerError extends StatelessWidget {
               children: [
                 const Icon(
                   Icons.no_photography_outlined,
-                  color: Colors.white,
+                  color: AppColors.text,
                   size: 38,
                 ),
                 const SizedBox(height: 14),
@@ -413,7 +434,7 @@ class _ScannerError extends StatelessWidget {
                       ? 'Разрешите доступ в настройках устройства или вставьте код вручную.'
                       : 'Попробуйте снова или вставьте текстовый код.',
                   textAlign: TextAlign.center,
-                  style: const TextStyle(color: Color(0xFFD9E3DD)),
+                  style: const TextStyle(color: AppColors.muted),
                 ),
                 const SizedBox(height: 18),
                 FilledButton(
@@ -430,6 +451,39 @@ class _ScannerError extends StatelessWidget {
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _PublicCodeNotice extends StatelessWidget {
+  const _PublicCodeNotice();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: const Color(0xFF17151F),
+        border: Border.all(color: AppColors.accentDeep),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: const Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(
+            Icons.verified_user_outlined,
+            color: AppColors.accentSoft,
+            size: 20,
+          ),
+          SizedBox(width: 11),
+          Expanded(
+            child: Text(
+              'QR содержит публичный ключ и право отправлять сообщения. Backup-кода в нём нет.',
+              style: TextStyle(fontSize: 12, color: AppColors.muted),
+            ),
+          ),
+        ],
       ),
     );
   }

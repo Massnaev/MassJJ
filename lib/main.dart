@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import 'src/app.dart';
 import 'src/app_controller.dart';
@@ -11,6 +12,15 @@ import 'src/data/local_vault.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  SystemChrome.setSystemUIOverlayStyle(
+    const SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+      statusBarIconBrightness: Brightness.light,
+      statusBarBrightness: Brightness.dark,
+      systemNavigationBarColor: Color(0xFF0B0B0F),
+      systemNavigationBarIconBrightness: Brightness.light,
+    ),
+  );
 
   final vault = LocalVault();
   final identityService = IdentityService(vault);

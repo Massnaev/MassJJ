@@ -27,7 +27,7 @@ void main() {
     );
 
     expect(find.byKey(const ValueKey('code-entry')), findsOneWidget);
-    expect(find.textContaining('На Windows'), findsOneWidget);
+    expect(find.textContaining('текстовый код'), findsOneWidget);
     await tester.enterText(
       find.byKey(const ValueKey('contact-code-field')),
       'p2p1.bad-code',

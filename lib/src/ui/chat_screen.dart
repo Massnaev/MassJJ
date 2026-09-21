@@ -4,6 +4,7 @@ import '../app_controller.dart';
 import '../core/crypto/crypto_engine.dart';
 import '../core/identity/anonymous_identity.dart';
 import '../core/messaging/chat_message.dart';
+import 'theme.dart';
 
 class ChatScreen extends StatefulWidget {
   const ChatScreen({
@@ -44,6 +45,7 @@ class _ChatScreenState extends State<ChatScreen> {
               children: [
                 CircleAvatar(
                   radius: 18,
+                  backgroundColor: AppColors.accentDeep,
                   child: Text(
                     widget.contact.displayName.characters.first.toUpperCase(),
                   ),
@@ -60,7 +62,14 @@ class _ChatScreenState extends State<ChatScreen> {
                       ),
                       Text(
                         _connectionLabel(),
-                        style: Theme.of(context).textTheme.bodySmall,
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color:
+                              widget.controller.isContactNearby(
+                                widget.contact.userId,
+                              )
+                              ? AppColors.success
+                              : AppColors.muted,
+                        ),
                       ),
                     ],
                   ),
@@ -70,7 +79,7 @@ class _ChatScreenState extends State<ChatScreen> {
             actions: [
               IconButton(
                 onPressed: _showSecurityDetails,
-                icon: const Icon(Icons.shield_outlined),
+                icon: const Icon(Icons.verified_user_outlined, size: 20),
                 tooltip: 'Защита диалога',
               ),
               const SizedBox(width: 6),
@@ -79,6 +88,7 @@ class _ChatScreenState extends State<ChatScreen> {
           body: SafeArea(
             child: Column(
               children: [
+                _EncryptionPill(label: widget.controller.cryptoInfo.label),
                 Expanded(
                   child: Center(
                     child: ConstrainedBox(
@@ -92,7 +102,7 @@ class _ChatScreenState extends State<ChatScreen> {
                               reverse: true,
                               padding: const EdgeInsets.fromLTRB(
                                 16,
-                                24,
+                                12,
                                 16,
                                 14,
                               ),
@@ -187,10 +197,13 @@ class _ChatEmpty extends StatelessWidget {
                 width: 52,
                 height: 52,
                 decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.primaryContainer,
+                  color: const Color(0xFF1D1830),
                   borderRadius: BorderRadius.circular(16),
                 ),
-                child: const Icon(Icons.lock_outline),
+                child: const Icon(
+                  Icons.lock_outline_rounded,
+                  color: AppColors.accentSoft,
+                ),
               ),
               const SizedBox(height: 18),
               Text(
@@ -227,10 +240,7 @@ class _MessageBubble extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final outgoing = message.direction == MessageDirection.outgoing;
-    final colorScheme = Theme.of(context).colorScheme;
-    final bubbleColor = outgoing
-        ? colorScheme.primaryContainer
-        : colorScheme.surfaceContainerLowest;
+    final bubbleColor = outgoing ? AppColors.accentDeep : AppColors.interactive;
     return Align(
       alignment: outgoing ? Alignment.centerRight : Alignment.centerLeft,
       child: Container(
@@ -241,9 +251,7 @@ class _MessageBubble extends StatelessWidget {
         padding: const EdgeInsets.fromLTRB(14, 10, 12, 8),
         decoration: BoxDecoration(
           color: bubbleColor,
-          border: outgoing
-              ? null
-              : Border.all(color: Theme.of(context).dividerColor),
+          border: outgoing ? null : Border.all(color: AppColors.line),
           borderRadius: BorderRadius.only(
             topLeft: const Radius.circular(16),
             topRight: const Radius.circular(16),
@@ -256,7 +264,10 @@ class _MessageBubble extends StatelessWidget {
           children: [
             Align(
               alignment: Alignment.centerLeft,
-              child: SelectableText(message.body),
+              child: SelectableText(
+                message.body,
+                style: const TextStyle(color: AppColors.text),
+              ),
             ),
             const SizedBox(height: 5),
             _MessageMeta(message: message),
@@ -338,7 +349,7 @@ class _Composer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: Theme.of(context).colorScheme.surface,
+      color: AppColors.canvas,
       shape: Border(top: BorderSide(color: Theme.of(context).dividerColor)),
       child: Padding(
         padding: const EdgeInsets.fromLTRB(14, 11, 14, 14),
@@ -348,6 +359,12 @@ class _Composer extends StatelessWidget {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
+                IconButton(
+                  onPressed: enabled ? () {} : null,
+                  tooltip: 'Вложения появятся позже',
+                  icon: const Icon(Icons.add_rounded, size: 21),
+                ),
+                const SizedBox(width: 8),
                 Expanded(
                   child: TextField(
                     controller: controller,
@@ -359,7 +376,7 @@ class _Composer extends StatelessWidget {
                     textCapitalization: TextCapitalization.sentences,
                     textInputAction: TextInputAction.newline,
                     decoration: const InputDecoration(
-                      hintText: 'Напишите сообщение',
+                      hintText: 'Сообщение',
                       counterText: '',
                       contentPadding: EdgeInsets.symmetric(
                         horizontal: 16,
@@ -376,7 +393,7 @@ class _Composer extends StatelessWidget {
                     return IconButton.filled(
                       onPressed: canSend ? onSend : null,
                       icon: enabled
-                          ? const Icon(Icons.arrow_upward)
+                          ? const Icon(Icons.send_rounded, size: 19)
                           : const SizedBox.square(
                               dimension: 18,
                               child: CircularProgressIndicator(strokeWidth: 2),
@@ -388,6 +405,43 @@ class _Composer extends StatelessWidget {
               ],
             ),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class _EncryptionPill extends StatelessWidget {
+  const _EncryptionPill({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Container(
+        margin: const EdgeInsets.only(top: 4, bottom: 6),
+        padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 7),
+        decoration: BoxDecoration(
+          color: const Color(0xFF211B32),
+          borderRadius: BorderRadius.circular(18),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(
+              Icons.lock_outline_rounded,
+              size: 15,
+              color: AppColors.accentSoft,
+            ),
+            const SizedBox(width: 7),
+            Text(
+              'Зашифровано · $label',
+              style: Theme.of(
+                context,
+              ).textTheme.labelMedium?.copyWith(color: AppColors.accentSoft),
+            ),
+          ],
         ),
       ),
     );

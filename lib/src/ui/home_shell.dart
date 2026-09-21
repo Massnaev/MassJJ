@@ -8,6 +8,7 @@ import '../core/identity/anonymous_identity.dart';
 import 'add_contact_screen.dart';
 import 'chat_screen.dart';
 import 'invite_code_panel.dart';
+import 'theme.dart';
 
 class HomeShell extends StatefulWidget {
   const HomeShell({required this.controller, super.key});
@@ -22,9 +23,21 @@ class _HomeShellState extends State<HomeShell> {
   int _selectedIndex = 0;
 
   static const _destinations = [
-    NavigationDestination(icon: Icon(Icons.forum_outlined), label: 'Чаты'),
-    NavigationDestination(icon: Icon(Icons.people_outline), label: 'Контакты'),
-    NavigationDestination(icon: Icon(Icons.key_outlined), label: 'Профиль'),
+    NavigationDestination(
+      icon: Icon(Icons.chat_bubble_outline_rounded),
+      selectedIcon: Icon(Icons.chat_bubble_rounded),
+      label: 'Чаты',
+    ),
+    NavigationDestination(
+      icon: Icon(Icons.people_outline_rounded),
+      selectedIcon: Icon(Icons.people_rounded),
+      label: 'Контакты',
+    ),
+    NavigationDestination(
+      icon: Icon(Icons.person_outline_rounded),
+      selectedIcon: Icon(Icons.person_rounded),
+      label: 'Профиль',
+    ),
   ];
 
   @override
@@ -56,11 +69,18 @@ class _HomeShellState extends State<HomeShell> {
             if (!wide) {
               return Scaffold(
                 body: SafeArea(child: body),
-                bottomNavigationBar: NavigationBar(
-                  selectedIndex: _selectedIndex,
-                  destinations: _destinations,
-                  onDestinationSelected: (value) =>
-                      setState(() => _selectedIndex = value),
+                bottomNavigationBar: SafeArea(
+                  top: false,
+                  minimum: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(22),
+                    child: NavigationBar(
+                      selectedIndex: _selectedIndex,
+                      destinations: _destinations,
+                      onDestinationSelected: (value) =>
+                          setState(() => _selectedIndex = value),
+                    ),
+                  ),
                 ),
               );
             }
@@ -127,11 +147,13 @@ class _PageFrame extends StatelessWidget {
     required this.title,
     required this.subtitle,
     required this.child,
+    this.action,
   });
 
   final String title;
   final String subtitle;
   final Widget child;
+  final Widget? action;
 
   @override
   Widget build(BuildContext context) {
@@ -140,7 +162,12 @@ class _PageFrame extends StatelessWidget {
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 920),
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(24, 30, 24, 24),
+          padding: EdgeInsets.fromLTRB(
+            showMark ? 20 : 32,
+            24,
+            showMark ? 20 : 32,
+            20,
+          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -153,16 +180,19 @@ class _PageFrame extends StatelessWidget {
                       children: [
                         Text(
                           title,
-                          style: Theme.of(context).textTheme.headlineLarge,
+                          style: showMark
+                              ? Theme.of(context).textTheme.headlineMedium
+                              : Theme.of(context).textTheme.headlineLarge,
                         ),
                         const SizedBox(height: 4),
                         Text(subtitle),
                       ],
                     ),
                   ),
+                  if (action != null) ...[const SizedBox(width: 12), action!],
                 ],
               ),
-              const SizedBox(height: 28),
+              const SizedBox(height: 22),
               Expanded(child: child),
             ],
           ),
@@ -172,7 +202,7 @@ class _PageFrame extends StatelessWidget {
   }
 }
 
-class _ChatsPage extends StatelessWidget {
+class _ChatsPage extends StatefulWidget {
   const _ChatsPage({
     required this.controller,
     required this.onOpen,
@@ -186,36 +216,83 @@ class _ChatsPage extends StatelessWidget {
   final VoidCallback onShowProfile;
 
   @override
+  State<_ChatsPage> createState() => _ChatsPageState();
+}
+
+class _ChatsPageState extends State<_ChatsPage> {
+  final _searchController = TextEditingController();
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final query = _searchController.text.trim().toLowerCase();
+    final contacts = widget.controller.contacts.where((contact) {
+      if (query.isEmpty) return true;
+      final last = widget.controller.lastMessageFor(contact.userId)?.body ?? '';
+      return contact.displayName.toLowerCase().contains(query) ||
+          last.toLowerCase().contains(query);
+    }).toList();
     return _PageFrame(
-      title: 'Сообщения',
-      subtitle: 'Личность создана локально · телефон и почта не нужны',
+      title: 'Чаты',
+      subtitle: 'Защищённая связь',
+      action: IconButton(
+        onPressed: widget.onAddContact,
+        tooltip: 'Добавить контакт',
+        icon: const Icon(Icons.add_rounded),
+      ),
       child: Column(
         children: [
-          _TransportBanner(controller: controller),
+          TextField(
+            controller: _searchController,
+            onChanged: (_) => setState(() {}),
+            decoration: const InputDecoration(
+              hintText: 'Поиск по чатам',
+              prefixIcon: Icon(
+                Icons.search_rounded,
+                size: 20,
+                color: AppColors.muted,
+              ),
+              isDense: true,
+            ),
+          ),
+          const SizedBox(height: 12),
+          _TransportBanner(controller: widget.controller),
           const SizedBox(height: 16),
           Expanded(
-            child: controller.contacts.isEmpty
+            child: widget.controller.contacts.isEmpty
                 ? _EmptyState(
                     icon: Icons.person_add_alt_1_outlined,
                     title: 'Добавьте первый контакт',
                     body:
                         'Вставьте код приглашения с другого устройства. После этого можно сразу начать зашифрованный диалог.',
                     primaryLabel: 'Добавить контакт',
-                    onPrimary: onAddContact,
+                    onPrimary: widget.onAddContact,
                     secondaryLabel: 'Показать мой код',
-                    onSecondary: onShowProfile,
+                    onSecondary: widget.onShowProfile,
+                  )
+                : contacts.isEmpty
+                ? const _EmptyState(
+                    icon: Icons.search_off_rounded,
+                    title: 'Ничего не найдено',
+                    body: 'Попробуйте другое имя или текст сообщения.',
                   )
                 : ListView.separated(
-                    itemCount: controller.contacts.length,
+                    itemCount: contacts.length,
                     separatorBuilder: (_, _) => const SizedBox(height: 10),
                     itemBuilder: (context, index) {
-                      final contact = controller.contacts[index];
-                      final last = controller.lastMessageFor(contact.userId);
+                      final contact = contacts[index];
+                      final last = widget.controller.lastMessageFor(
+                        contact.userId,
+                      );
                       return _ContactTile(
                         contact: contact,
                         trailing: last == null ? 'Новый контакт' : last.body,
-                        onTap: () => onOpen(contact),
+                        onTap: () => widget.onOpen(contact),
                       );
                     },
                   ),
@@ -241,16 +318,17 @@ class _ContactsPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return _PageFrame(
       title: 'Контакты',
-      subtitle: 'Обменяйтесь кодами лично или через доверенный канал',
+      subtitle: controller.contacts.isEmpty
+          ? 'Никого не добавлено'
+          : 'Контактов: ${controller.contacts.length}',
+      action: IconButton(
+        onPressed: onAddContact,
+        tooltip: 'Добавить контакт',
+        icon: const Icon(Icons.add_rounded),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          FilledButton.icon(
-            onPressed: onAddContact,
-            icon: const Icon(Icons.add),
-            label: const Text('Добавить по коду'),
-          ),
-          const SizedBox(height: 16),
           Expanded(
             child: controller.contacts.isEmpty
                 ? const _EmptyState(
@@ -294,8 +372,8 @@ class _ProfilePageState extends State<_ProfilePage> {
   Widget build(BuildContext context) {
     final identity = widget.controller.identity;
     return _PageFrame(
-      title: 'Ваш профиль',
-      subtitle: 'Псевдонимная личность хранится только на этом устройстве',
+      title: 'Профиль',
+      subtitle: 'Локальная личность',
       child: ListView(
         children: [
           Card(
@@ -415,8 +493,8 @@ class _TransportBanner extends StatelessWidget {
   Widget build(BuildContext context) {
     final nearby = controller.nearbyPeerCount;
     final color = nearby > 0 || controller.relayReady
-        ? const Color(0xFF3F8061)
-        : const Color(0xFFD58B36);
+        ? AppColors.success
+        : AppColors.queued;
     final title = nearby > 0
         ? nearby == 1
               ? 'Одно устройство рядом'
@@ -437,10 +515,10 @@ class _TransportBanner extends StatelessWidget {
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.08),
         border: Border.all(color: color.withValues(alpha: 0.28)),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(14),
       ),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
         child: Row(
           children: [
             Container(
@@ -461,7 +539,13 @@ class _TransportBanner extends StatelessWidget {
                 ],
               ),
             ),
-            Icon(nearby > 0 ? Icons.wifi_tethering : Icons.lock_outline),
+            Icon(
+              nearby > 0
+                  ? Icons.wifi_tethering_rounded
+                  : Icons.lock_outline_rounded,
+              size: 20,
+              color: color,
+            ),
           ],
         ),
       ),
@@ -482,15 +566,25 @@ class _ContactTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
+    return Material(
+      color: AppColors.canvas,
       child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 2, vertical: 7),
         leading: CircleAvatar(
+          radius: 23,
+          backgroundColor: AppColors.accentDeep,
           child: Text(contact.displayName.characters.first.toUpperCase()),
         ),
-        title: Text(contact.displayName),
+        title: Text(
+          contact.displayName,
+          style: const TextStyle(fontWeight: FontWeight.w700),
+        ),
         subtitle: Text(trailing, maxLines: 1, overflow: TextOverflow.ellipsis),
-        trailing: const Icon(Icons.chevron_right),
+        trailing: const Icon(
+          Icons.chevron_right_rounded,
+          size: 20,
+          color: AppColors.faint,
+        ),
         onTap: onTap,
       ),
     );
@@ -524,7 +618,15 @@ class _EmptyState extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 48, color: Theme.of(context).colorScheme.primary),
+            Container(
+              width: 64,
+              height: 64,
+              decoration: BoxDecoration(
+                color: const Color(0xFF1D1830),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Icon(icon, size: 28, color: AppColors.accentSoft),
+            ),
             const SizedBox(height: 16),
             Text(
               title,
@@ -561,11 +663,11 @@ class _Mark extends StatelessWidget {
       width: 42,
       height: 42,
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.primary,
+        color: AppColors.accent,
         borderRadius: BorderRadius.circular(13),
       ),
       child: Icon(
-        Icons.hub_outlined,
+        Icons.chat_bubble_outline_rounded,
         color: Theme.of(context).colorScheme.onPrimary,
       ),
     );
