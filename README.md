@@ -1,89 +1,134 @@
-# MassJJ MVP
+# MassJJ
 
-Anonymous Flutter messenger foundation for Android, iOS, and Windows. Accounts
-are local identities: no phone number, email address, or password-reset service.
+Экспериментальный P2P-мессенджер без номера телефона и электронной почты.
+Текущая альфа ориентирована на Android и предназначена для разработки,
+исследований и закрытого тестирования.
 
-## Included
+> [!WARNING]
+> MassJJ пока не является production-secure или анонимным мессенджером.
+> Криптографический протокол MVP не проходил независимый аудит и не имеет
+> Double Ratchet, forward secrecy или post-compromise security. Не используйте
+> эту версию для чувствительной переписки.
 
-- local X25519 identity and a portable recovery code;
-- first-run flow for creating or restoring an identity, with an explicit backup
-  confirmation;
-- copy/paste invitation codes (`p2p1.…`);
-- locally rendered QR invitations;
-- camera scanning on Android and iOS, with text-code entry on Windows;
-- encrypted local storage backed by the platform secure store;
-- authenticated encrypted message envelopes;
-- persistent local outbox;
-- private contact discovery and direct encrypted delivery inside the same local
-  Wi-Fi network;
-- transport routing boundary for relay, nearby, and DTN delivery;
-- responsive phone/desktop interface in Russian;
-- explicit in-chat disclosure of the active crypto suite and contact
-  fingerprint.
+## Как выглядит
 
-The client first tries a discovered contact directly over the local network,
-then a configured relay, and finally the encrypted outbox. With `RELAY_URL`
-configured, it registers its anonymous mailbox, sends, polls, decrypts, and
-acknowledges packets. Without Internet, two devices connected to the same LAN
-can exchange encrypted packets directly. Otherwise packets stay queued and are
-retried when a route appears.
+<p align="center">
+  <img src="test/goldens/android_chats.png" width="260" alt="Список чатов MassJJ">
+  <img src="test/goldens/android_conversation.png" width="260" alt="Диалог MassJJ">
+  <img src="test/goldens/android_profile.png" width="260" alt="Профиль MassJJ">
+</p>
 
-This slice uses Bonjour/mDNS and ordinary LAN TCP. It is not Wi-Fi Direct and
-does not yet bridge distant offline devices or use Bluetooth. Protocol details
-and limitations are in [`docs/NEARBY_WIFI.md`](docs/NEARBY_WIFI.md).
+## Что уже работает
 
-An independently runnable opaque relay with capability-separated mailbox access
-lives in [`server/`](server/). It uses only Node.js built-ins and has integration
-tests, so no `npm install` is needed.
+- локальная личность без централизованной регистрации;
+- восстановление личности с помощью recovery-кода;
+- добавление контакта по текстовому приглашению или QR-коду;
+- шифрование сообщений до передачи транспорту;
+- защищённое локальное хранилище;
+- локальная очередь сообщений при отсутствии маршрута;
+- прямой обмен в одной Wi-Fi/LAN-сети через приватное mDNS-обнаружение;
+- опциональный непрозрачный relay, который хранит только зашифрованные пакеты;
+- светлый Android-интерфейс MassJJ.
 
-## Development setup
+Телефон, email и облачный аккаунт не требуются. При наличии соседнего устройства
+клиент сначала пробует локальный маршрут, затем настроенный relay, после чего
+сохраняет пакет в локальной очереди.
 
-Android, iOS, and Windows platform projects are committed. With Flutter 3.47 or
-newer on PATH:
+## Статус распространения
+
+Официальных APK и GitHub Releases пока нет. Репозиторий является единственным
+официальным источником кода, а тестовые сборки необходимо собирать самостоятельно.
+Не устанавливайте APK из неизвестных источников, которые выдают себя за MassJJ.
+
+Первая публичная цель — Android. Проекты iOS и Windows находятся в дереве для
+дальнейшей разработки, но не входят в текущую поддерживаемую альфу.
+
+## Быстрый старт
+
+Требования:
+
+- Flutter 3.47 или новее;
+- Android SDK 36;
+- Node.js 22+ только для локального relay.
 
 ```powershell
 flutter pub get
 flutter analyze
 flutter test
+flutter build apk --release
 ```
 
-Run on Windows:
+Готовый локальный APK появится в
+`build/app/outputs/flutter-apk/app-release.apk`. Текущая release-конфигурация
+использует debug-подпись и подходит только для разработки и закрытого теста.
+
+### Локальный relay
+
+Relay использует только встроенные модули Node.js:
 
 ```powershell
-flutter run -d windows
-```
-
-Run the client against a relay (use an HTTPS URL outside local development):
-
-```powershell
-flutter run -d windows --dart-define=RELAY_URL=http://127.0.0.1:8787
-```
-
-Android emulators normally reach the host at `http://10.0.2.2:8787`. Local
-clear-text HTTP also needs a development-only platform exception; release builds
-should require HTTPS.
-
-Test the relay:
-
-```powershell
+node server/relay.mjs
 node --test server/test/*.test.mjs
 ```
 
-Run the cross-runtime encrypted exchange tests. They start the real Node relay
-on a random local port and verify both the low-level encrypted packet contract
-and the complete two-`AppController` send, receive, persist, and acknowledge
-path:
+По умолчанию он слушает только `127.0.0.1:8787`. Не публикуйте этот MVP-relay
+в интернете: ему ещё нужны безопасное создание mailbox, глобальные квоты,
+rate limiting, TLS, ротация capabilities и production-хранилище.
+
+Для локальной разработки:
 
 ```powershell
-flutter test e2e/relay_e2e_test.dart
+flutter run --dart-define=RELAY_URL=http://127.0.0.1:8787
 ```
 
-Android builds require the Android SDK. iOS builds must be signed and compiled
-on macOS with Xcode, even though the shared Dart code can be developed here.
-Windows Firewall and the iOS local-network permission prompt must allow local
-discovery and inbound delivery.
+Android-эмулятор обычно обращается к хосту через `10.0.2.2`. Для любого
+нелокального подключения должен использоваться HTTPS.
 
-## Security status
+## Архитектура
 
-This is an MVP, not a production-secure messenger. Read
-[`docs/SECURITY_MODEL.md`](docs/SECURITY_MODEL.md) before extending or shipping it.
+```text
+UI -> AppController -> CryptoEngine -> EncryptedPacket -> TransportRouter
+                                                        |-> Nearby LAN
+                                                        |-> Internet relay
+                                                        `-> Local outbox
+```
+
+Подробнее:
+
+- [архитектура](docs/ARCHITECTURE.md);
+- [локальный Wi-Fi/LAN-транспорт](docs/NEARBY_WIFI.md);
+- [модель безопасности MVP](docs/SECURITY_MODEL.md);
+- [план миграции на Double Ratchet](docs/RATCHET_MIGRATION.md);
+- [контекст для AI-разработчиков](docs/AI_HANDOFF.md).
+
+## План развития
+
+- исправить блокирующие security-риски relay и транспорта;
+- перейти на аудированный протокол с forward secrecy;
+- добавить подписываемые Android alpha-сборки;
+- протестировать обмен на двух физических Android-устройствах;
+- добавить отправку файлов и уведомления;
+- реализовать Bluetooth/Wi-Fi Direct и DTN-передачу через промежуточные устройства;
+- вернуться к Windows и iOS после стабилизации Android.
+
+## Участие в разработке
+
+Перед изменениями прочитайте [CONTRIBUTING.md](CONTRIBUTING.md),
+[SECURITY.md](SECURITY.md) и [AGENTS.md](AGENTS.md). Уязвимости не следует
+публиковать в обычных Issues — используйте приватный Security Advisory.
+
+## Поддержать автора
+
+- **BTC:** `bc1qky9hfme9jq27ede0yjhd4f4xstkx8y2lapq76l`
+- **GRAM:** `UQBFqd3o_0Ws-ylj0s2Bru38Stbf2C6P5GE28mHkMyIyrzkE`
+- **UCDT (SOL):** `FogudfiZNEX6G9UXqCJ3g5Cn6oTWE5nkisF1P4Xjn8XQ`
+
+Перед отправкой обязательно проверьте выбранную сеть и адрес. Адреса также
+продублированы в [SUPPORT.md](SUPPORT.md).
+
+## Лицензия
+
+MassJJ распространяется по лицензии
+[GNU Affero General Public License v3.0](LICENSE). Изменённые версии клиента или
+relay, предоставляемые пользователям по сети, должны сохранять открытый исходный
+код на условиях AGPL-3.0.
