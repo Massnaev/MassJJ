@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -73,15 +72,11 @@ class _HomeShellState extends State<HomeShell> {
                 body: SafeArea(child: body),
                 bottomNavigationBar: SafeArea(
                   top: false,
-                  minimum: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(22),
-                    child: NavigationBar(
-                      selectedIndex: _selectedIndex,
-                      destinations: _destinations,
-                      onDestinationSelected: (value) =>
-                          setState(() => _selectedIndex = value),
-                    ),
+                  child: NavigationBar(
+                    selectedIndex: _selectedIndex,
+                    destinations: _destinations,
+                    onDestinationSelected: (value) =>
+                        setState(() => _selectedIndex = value),
                   ),
                 ),
               );
@@ -159,31 +154,30 @@ class _PageFrame extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final showMark = MediaQuery.sizeOf(context).width < 820;
+    final compact = MediaQuery.sizeOf(context).width < 820;
     return Center(
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 920),
         child: Padding(
           padding: EdgeInsets.fromLTRB(
-            showMark ? 20 : 32,
-            24,
-            showMark ? 20 : 32,
-            20,
+            compact ? 16 : 32,
+            compact ? 12 : 24,
+            compact ? 16 : 32,
+            compact ? 8 : 20,
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
                 children: [
-                  if (showMark) ...[const _Mark(), const SizedBox(width: 14)],
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
                           title,
-                          style: showMark
-                              ? Theme.of(context).textTheme.headlineMedium
+                          style: compact
+                              ? Theme.of(context).textTheme.headlineSmall
                               : Theme.of(context).textTheme.headlineLarge,
                         ),
                         const SizedBox(height: 4),
@@ -194,7 +188,7 @@ class _PageFrame extends StatelessWidget {
                   if (action != null) ...[const SizedBox(width: 12), action!],
                 ],
               ),
-              const SizedBox(height: 22),
+              SizedBox(height: compact ? 12 : 22),
               Expanded(child: child),
             ],
           ),
@@ -262,17 +256,17 @@ class _ChatsPageState extends State<_ChatsPage> {
               isDense: true,
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 10),
           if (widget.controller.contacts.isNotEmpty) ...[
             _NearbyStrip(
               controller: widget.controller,
               onOpen: widget.onOpen,
               onAddContact: widget.onAddContact,
             ),
-            const SizedBox(height: 14),
+            const SizedBox(height: 8),
           ],
           _TransportBanner(controller: widget.controller),
-          const SizedBox(height: 16),
+          const SizedBox(height: 6),
           Expanded(
             child: widget.controller.contacts.isEmpty
                 ? _EmptyState(
@@ -293,13 +287,13 @@ class _ChatsPageState extends State<_ChatsPage> {
                   )
                 : ListView.separated(
                     itemCount: contacts.length,
-                    separatorBuilder: (_, _) => const SizedBox(height: 10),
+                    separatorBuilder: (_, _) => const SizedBox.shrink(),
                     itemBuilder: (context, index) {
                       final contact = contacts[index];
                       final last = widget.controller.lastMessageFor(
                         contact.userId,
                       );
-                      return _ChatGlassTile(
+                      return _ChatListTile(
                         contact: contact,
                         message: last,
                         nearby: widget.controller.isContactNearby(
@@ -316,7 +310,7 @@ class _ChatsPageState extends State<_ChatsPage> {
   }
 }
 
-class _ContactsPage extends StatelessWidget {
+class _ContactsPage extends StatefulWidget {
   const _ContactsPage({
     required this.controller,
     required this.onOpen,
@@ -328,37 +322,103 @@ class _ContactsPage extends StatelessWidget {
   final VoidCallback onAddContact;
 
   @override
+  State<_ContactsPage> createState() => _ContactsPageState();
+}
+
+class _ContactsPageState extends State<_ContactsPage> {
+  final _searchController = TextEditingController();
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final query = _searchController.text.trim().toLowerCase();
+    final contacts = widget.controller.contacts
+        .where((contact) => contact.displayName.toLowerCase().contains(query))
+        .toList();
     return _PageFrame(
       title: 'Контакты',
-      subtitle: controller.contacts.isEmpty
+      subtitle: widget.controller.contacts.isEmpty
           ? 'Никого не добавлено'
-          : 'Контактов: ${controller.contacts.length}',
+          : 'Контактов: ${widget.controller.contacts.length}',
       action: IconButton(
-        onPressed: onAddContact,
+        onPressed: widget.onAddContact,
         tooltip: 'Добавить контакт',
-        icon: const Icon(Icons.add_rounded),
+        icon: const Icon(Icons.person_add_alt_1_rounded),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          TextField(
+            controller: _searchController,
+            onChanged: (_) => setState(() {}),
+            decoration: const InputDecoration(
+              hintText: 'Поиск контактов',
+              prefixIcon: Icon(Icons.search_rounded, size: 20),
+              isDense: true,
+            ),
+          ),
+          const SizedBox(height: 4),
+          ListTile(
+            contentPadding: const EdgeInsets.symmetric(horizontal: 4),
+            leading: const Icon(
+              Icons.person_add_alt_1_rounded,
+              color: AppColors.accent,
+            ),
+            title: const Text(
+              'Добавить по приглашению',
+              style: TextStyle(
+                color: AppColors.accentDeep,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            trailing: const Icon(
+              Icons.chevron_right_rounded,
+              color: AppColors.faint,
+            ),
+            onTap: widget.onAddContact,
+          ),
+          Container(
+            color: AppColors.interactive,
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+            child: const Text(
+              'По имени · ключи проверяются локально',
+              style: TextStyle(fontSize: 11, color: AppColors.muted),
+            ),
+          ),
           Expanded(
-            child: controller.contacts.isEmpty
+            child: widget.controller.contacts.isEmpty
                 ? const _EmptyState(
                     icon: Icons.qr_code_2,
                     title: 'Контактов пока нет',
                     body:
-                        'Ваш QR-код находится в профиле. Камерное сканирование добавим после подключения платформенных разрешений.',
+                        'Ваш QR-код находится в профиле. Добавьте контакт камерой или текстовым приглашением.',
+                  )
+                : contacts.isEmpty
+                ? const _EmptyState(
+                    icon: Icons.search_off_rounded,
+                    title: 'Контакт не найден',
+                    body: 'Попробуйте другое имя.',
                   )
                 : ListView.separated(
-                    itemCount: controller.contacts.length,
-                    separatorBuilder: (_, _) => const SizedBox(height: 10),
+                    itemCount: contacts.length,
+                    separatorBuilder: (_, _) => const SizedBox.shrink(),
                     itemBuilder: (context, index) {
-                      final contact = controller.contacts[index];
+                      final contact = contacts[index];
                       return _ContactTile(
                         contact: contact,
-                        trailing: contact.fingerprint,
-                        onTap: () => onOpen(contact),
+                        trailing:
+                            widget.controller.isContactNearby(contact.userId)
+                            ? 'в сети · рядом'
+                            : 'ключ ${contact.fingerprint}',
+                        online: widget.controller.isContactNearby(
+                          contact.userId,
+                        ),
+                        onTap: () => widget.onOpen(contact),
                       );
                     },
                   ),
@@ -380,105 +440,108 @@ class _ProfilePage extends StatefulWidget {
 
 class _ProfilePageState extends State<_ProfilePage> {
   bool _showRecovery = false;
+  bool _showInvite = false;
 
   @override
   Widget build(BuildContext context) {
     final identity = widget.controller.identity;
-    return _PageFrame(
-      title: 'Профиль',
-      subtitle: 'Локальная личность',
+    return ColoredBox(
+      color: AppColors.surface,
       child: ListView(
+        padding: EdgeInsets.zero,
         children: [
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    identity.displayName,
-                    style: Theme.of(context).textTheme.headlineSmall,
-                  ),
-                  const SizedBox(height: 18),
-                  const Text('ID устройства'),
-                  const SizedBox(height: 4),
-                  SelectableText(
-                    identity.userId,
-                    style: const TextStyle(fontFamily: 'monospace'),
-                  ),
-                  const SizedBox(height: 14),
-                  const Text('Отпечаток ключа'),
-                  const SizedBox(height: 4),
-                  SelectableText(
-                    identity.fingerprint,
-                    style: const TextStyle(fontFamily: 'monospace'),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(height: 14),
-          InviteCodePanel(
-            inviteCode: widget.controller.inviteCode,
-            onCopy: () => _copy(
+          _ProfileHero(
+            name: identity.displayName,
+            onInvite: () => _copy(
               context,
               widget.controller.inviteCode,
-              'Код приглашения скопирован',
+              'Приглашение скопировано',
             ),
+            onQr: () => setState(() => _showInvite = !_showInvite),
+            onSecurity: () => setState(() => _showRecovery = !_showRecovery),
           ),
-          const SizedBox(height: 14),
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Row(
-                    children: [
-                      const Icon(Icons.warning_amber_rounded),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Text(
-                          'Код восстановления',
-                          style: Theme.of(context).textTheme.titleMedium,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  const Text(
-                    'Любой, кто получит этот код, сможет восстановить вашу личность.',
-                  ),
-                  const SizedBox(height: 12),
-                  if (_showRecovery)
+          _ProfileInfoRow(
+            title: 'Локальный ID',
+            value: identity.userId,
+            icon: Icons.alternate_email_rounded,
+            monospace: true,
+          ),
+          _ProfileInfoRow(
+            title: 'Отпечаток ключа',
+            value: identity.fingerprint,
+            icon: Icons.fingerprint_rounded,
+            monospace: true,
+          ),
+          _ProfileInfoRow(
+            title: 'Хранилище',
+            value: 'Ключи находятся только на этом устройстве',
+            icon: Icons.phone_android_rounded,
+          ),
+          _ProfileInfoRow(
+            title: 'Маршрут сообщений',
+            value: widget.controller.nearbyPeerCount > 0
+                ? 'LAN активен · relay как резерв'
+                : widget.controller.relayReady
+                ? 'Relay подключён'
+                : 'Зашифрованная локальная очередь',
+            icon: Icons.route_rounded,
+          ),
+          if (_showInvite)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(14, 14, 14, 0),
+              child: InviteCodePanel(
+                inviteCode: widget.controller.inviteCode,
+                onCopy: () => _copy(
+                  context,
+                  widget.controller.inviteCode,
+                  'Код приглашения скопирован',
+                ),
+              ),
+            ),
+          if (_showRecovery)
+            Padding(
+              padding: const EdgeInsets.all(14),
+              child: Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFFF5E6),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    const Text(
+                      'Код восстановления',
+                      style: TextStyle(fontWeight: FontWeight.w700),
+                    ),
+                    const SizedBox(height: 6),
+                    const Text(
+                      'Не отправляйте этот код другим людям.',
+                      style: TextStyle(color: AppColors.muted),
+                    ),
+                    const SizedBox(height: 12),
                     SelectableText(
                       identity.recoveryCode,
-                      style: const TextStyle(fontFamily: 'monospace'),
-                    )
-                  else
-                    const Text('•••• •••• •••• ••••'),
-                  const SizedBox(height: 12),
-                  OutlinedButton(
-                    onPressed: () =>
-                        setState(() => _showRecovery = !_showRecovery),
-                    child: Text(_showRecovery ? 'Скрыть' : 'Показать'),
-                  ),
-                  if (_showRecovery) ...[
-                    const SizedBox(height: 8),
-                    OutlinedButton.icon(
+                      style: const TextStyle(
+                        fontFamily: 'monospace',
+                        fontSize: 12,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    TextButton.icon(
                       onPressed: () => _copy(
                         context,
                         identity.recoveryCode,
                         'Код восстановления скопирован',
                       ),
-                      icon: const Icon(Icons.copy_outlined),
-                      label: const Text('Копировать код восстановления'),
+                      icon: const Icon(Icons.copy_rounded),
+                      label: const Text('Копировать'),
                     ),
                   ],
-                ],
+                ),
               ),
             ),
-          ),
+          const SizedBox(height: 20),
         ],
       ),
     );
@@ -494,6 +557,262 @@ class _ProfilePageState extends State<_ProfilePage> {
     ScaffoldMessenger.of(
       context,
     ).showSnackBar(SnackBar(content: Text(confirmation)));
+  }
+}
+
+class _ProfileHero extends StatelessWidget {
+  const _ProfileHero({
+    required this.name,
+    required this.onInvite,
+    required this.onQr,
+    required this.onSecurity,
+  });
+
+  final String name;
+  final VoidCallback onInvite;
+  final VoidCallback onQr;
+  final VoidCallback onSecurity;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 250,
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFF36AEDD), Color(0xFF6C72D9)],
+        ),
+      ),
+      child: Stack(
+        children: [
+          const Positioned(
+            left: -30,
+            top: 40,
+            child: _HeroOrb(size: 120, opacity: 0.08),
+          ),
+          const Positioned(
+            right: -24,
+            top: -20,
+            child: _HeroOrb(size: 150, opacity: 0.10),
+          ),
+          Positioned.fill(
+            child: Column(
+              children: [
+                const Padding(
+                  padding: EdgeInsets.fromLTRB(18, 12, 18, 0),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.grid_view_rounded,
+                        color: Colors.white,
+                        size: 20,
+                      ),
+                      Spacer(),
+                      Text(
+                        'MASSJJ',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: 1.2,
+                        ),
+                      ),
+                      Spacer(),
+                      Icon(
+                        Icons.more_vert_rounded,
+                        color: Colors.white,
+                        size: 20,
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 14),
+                Container(
+                  width: 78,
+                  height: 78,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.24),
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.85),
+                      width: 2,
+                    ),
+                  ),
+                  alignment: Alignment.center,
+                  child: Text(
+                    name.characters.first.toUpperCase(),
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 30,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  name,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 19,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.circle, color: Color(0xFFBDF7D4), size: 7),
+                    SizedBox(width: 5),
+                    Text(
+                      'локальная личность',
+                      style: TextStyle(color: Colors.white, fontSize: 11),
+                    ),
+                  ],
+                ),
+                const Spacer(),
+                Container(
+                  height: 62,
+                  margin: const EdgeInsets.fromLTRB(12, 0, 12, 10),
+                  decoration: BoxDecoration(
+                    color: Colors.black.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Row(
+                    children: [
+                      _ProfileAction(
+                        icon: Icons.person_add_alt_1_rounded,
+                        label: 'Пригласить',
+                        onTap: onInvite,
+                      ),
+                      _ProfileAction(
+                        icon: Icons.qr_code_2_rounded,
+                        label: 'QR-код',
+                        onTap: onQr,
+                      ),
+                      _ProfileAction(
+                        icon: Icons.security_rounded,
+                        label: 'Безопасность',
+                        onTap: onSecurity,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _HeroOrb extends StatelessWidget {
+  const _HeroOrb({required this.size, required this.opacity});
+
+  final double size;
+  final double opacity;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: opacity),
+        shape: BoxShape.circle,
+      ),
+    );
+  }
+}
+
+class _ProfileAction extends StatelessWidget {
+  const _ProfileAction({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(10),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, color: Colors.white, size: 21),
+            const SizedBox(height: 4),
+            Text(
+              label,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 10,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ProfileInfoRow extends StatelessWidget {
+  const _ProfileInfoRow({
+    required this.title,
+    required this.value,
+    required this.icon,
+    this.monospace = false,
+  });
+
+  final String title;
+  final String value;
+  final IconData icon;
+  final bool monospace;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 11),
+        decoration: const BoxDecoration(
+          border: Border(bottom: BorderSide(color: AppColors.line)),
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(icon, color: AppColors.accent, size: 20),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                  const SizedBox(height: 2),
+                  SelectableText(
+                    value,
+                    style: TextStyle(
+                      color: AppColors.muted,
+                      fontSize: 12,
+                      fontFamily: monospace ? 'monospace' : null,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
 
@@ -596,15 +915,18 @@ class _QuickContact extends StatelessWidget {
                   height: 46,
                   decoration: BoxDecoration(
                     color: color,
-                    borderRadius: BorderRadius.circular(15),
+                    shape: BoxShape.circle,
                     border: Border.all(color: AppColors.line),
                   ),
                   alignment: Alignment.center,
                   child: icon != null
-                      ? Icon(icon, size: 20, color: AppColors.muted)
+                      ? Icon(icon, size: 20, color: AppColors.accent)
                       : Text(
                           initial!,
-                          style: const TextStyle(fontWeight: FontWeight.w800),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w800,
+                          ),
                         ),
                 ),
                 if (online)
@@ -639,8 +961,8 @@ class _QuickContact extends StatelessWidget {
   }
 }
 
-class _ChatGlassTile extends StatelessWidget {
-  const _ChatGlassTile({
+class _ChatListTile extends StatelessWidget {
+  const _ChatListTile({
     required this.contact,
     required this.message,
     required this.nearby,
@@ -654,141 +976,107 @@ class _ChatGlassTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final accent = message?.status == MessageStatus.queued
-        ? AppColors.queued
-        : nearby
-        ? AppColors.success
-        : AppColors.accentSoft;
     final avatarColor = _avatarColor(contact.displayName);
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Colors.white.withValues(alpha: 0.20),
-            accent.withValues(alpha: 0.24),
-            AppColors.line.withValues(alpha: 0.70),
-          ],
-          stops: const [0, 0.42, 1],
-        ),
-        borderRadius: BorderRadius.circular(19),
-        boxShadow: [
-          BoxShadow(
-            color: accent.withValues(alpha: 0.07),
-            blurRadius: 18,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(1),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(18),
-          child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
-            child: Material(
-              color: AppColors.raised.withValues(alpha: 0.90),
-              child: InkWell(
-                onTap: onTap,
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(13, 12, 12, 12),
-                  child: Row(
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          child: Row(
+            children: [
+              Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  CircleAvatar(
+                    radius: 25,
+                    backgroundColor: avatarColor,
+                    foregroundColor: Colors.white,
+                    child: Text(
+                      contact.displayName.characters.first.toUpperCase(),
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                  if (nearby)
+                    Positioned(
+                      right: -1,
+                      bottom: 1,
+                      child: Container(
+                        width: 13,
+                        height: 13,
+                        decoration: BoxDecoration(
+                          color: AppColors.success,
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: AppColors.surface,
+                            width: 2,
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Container(
+                  padding: const EdgeInsets.only(bottom: 9),
+                  decoration: const BoxDecoration(
+                    border: Border(
+                      bottom: BorderSide(color: AppColors.line, width: 0.7),
+                    ),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Stack(
-                        clipBehavior: Clip.none,
+                      Row(
                         children: [
-                          Container(
-                            width: 48,
-                            height: 48,
-                            decoration: BoxDecoration(
-                              color: avatarColor,
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                            alignment: Alignment.center,
+                          Expanded(
                             child: Text(
-                              contact.displayName.characters.first
-                                  .toUpperCase(),
+                              contact.displayName,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                               style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w800,
+                                fontSize: 15,
+                                fontWeight: FontWeight.w700,
                               ),
                             ),
                           ),
-                          if (nearby)
-                            Positioned(
-                              right: -2,
-                              bottom: -2,
-                              child: Container(
-                                width: 13,
-                                height: 13,
-                                decoration: BoxDecoration(
-                                  color: AppColors.success,
-                                  shape: BoxShape.circle,
-                                  border: Border.all(
-                                    color: AppColors.raised,
-                                    width: 2,
+                          if (message != null)
+                            Text(
+                              _time(message!.createdAt),
+                              style: Theme.of(context).textTheme.bodySmall
+                                  ?.copyWith(
+                                    color: AppColors.faint,
+                                    fontFeatures: const [
+                                      FontFeature.tabularFigures(),
+                                    ],
                                   ),
-                                ),
-                              ),
                             ),
                         ],
                       ),
-                      const SizedBox(width: 13),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: Text(
-                                    contact.displayName,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.w700,
-                                    ),
-                                  ),
-                                ),
-                                if (message != null)
-                                  Text(
-                                    _time(message!.createdAt),
-                                    style: Theme.of(context).textTheme.bodySmall
-                                        ?.copyWith(
-                                          color: AppColors.faint,
-                                          fontFeatures: const [
-                                            FontFeature.tabularFigures(),
-                                          ],
-                                        ),
-                                  ),
-                              ],
+                      const SizedBox(height: 3),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              message?.body ?? 'Новый контакт',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: Theme.of(context).textTheme.bodySmall,
                             ),
-                            const SizedBox(height: 4),
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: Text(
-                                    message?.body ?? 'Новый контакт',
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: Theme.of(
-                                      context,
-                                    ).textTheme.bodySmall,
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                _MessageStatusMark(message: message),
-                              ],
-                            ),
-                          ],
-                        ),
+                          ),
+                          const SizedBox(width: 8),
+                          _MessageStatusMark(message: message),
+                        ],
                       ),
                     ],
                   ),
                 ),
               ),
-            ),
+            ],
           ),
         ),
       ),
@@ -860,30 +1148,29 @@ class _TransportBanner extends StatelessWidget {
         ? 'Relay подключён'
         : 'Локальная очередь';
     final subtitle = nearby > 0
-        ? 'Сообщения контактам рядом идут напрямую по локальной Wi-Fi-сети.'
+        ? 'Прямое соединение по Wi-Fi'
         : controller.relayReady
-        ? 'Зашифрованные пакеты отправляются и принимаются.'
+        ? 'Пакеты отправляются и принимаются'
         : controller.relayConfigured
-        ? 'Relay недоступен; сообщения дождутся подключения.'
+        ? 'Сообщения дождутся подключения'
         : controller.nearbyReady
-        ? 'Ищем знакомые устройства в локальной сети.'
-        : 'Пакеты шифруются и сохраняются до появления транспорта.';
+        ? 'Ищем устройства в локальной сети'
+        : 'Сообщения сохраняются на устройстве';
     return Container(
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.08),
-        border: Border.all(color: color.withValues(alpha: 0.28)),
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(11),
       ),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         child: Row(
           children: [
             Container(
-              width: 10,
-              height: 10,
+              width: 8,
+              height: 8,
               decoration: BoxDecoration(color: color, shape: BoxShape.circle),
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: 10),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -892,7 +1179,7 @@ class _TransportBanner extends StatelessWidget {
                     title,
                     style: const TextStyle(fontWeight: FontWeight.w700),
                   ),
-                  Text(subtitle),
+                  Text(subtitle, style: Theme.of(context).textTheme.bodySmall),
                 ],
               ),
             ),
@@ -900,7 +1187,7 @@ class _TransportBanner extends StatelessWidget {
               nearby > 0
                   ? Icons.wifi_tethering_rounded
                   : Icons.lock_outline_rounded,
-              size: 20,
+              size: 18,
               color: color,
             ),
           ],
@@ -915,28 +1202,58 @@ class _ContactTile extends StatelessWidget {
     required this.contact,
     required this.trailing,
     required this.onTap,
+    this.online = false,
   });
 
   final Contact contact;
   final String trailing;
   final VoidCallback onTap;
+  final bool online;
 
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: AppColors.canvas,
+      color: AppColors.surface,
       child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 2, vertical: 7),
-        leading: CircleAvatar(
-          radius: 23,
-          backgroundColor: AppColors.accentDeep,
-          child: Text(contact.displayName.characters.first.toUpperCase()),
+        minTileHeight: 62,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 4),
+        leading: Stack(
+          children: [
+            CircleAvatar(
+              radius: 23,
+              backgroundColor: AppColors.accentDeep,
+              foregroundColor: Colors.white,
+              child: Text(contact.displayName.characters.first.toUpperCase()),
+            ),
+            if (online)
+              Positioned(
+                right: 0,
+                bottom: 0,
+                child: Container(
+                  width: 12,
+                  height: 12,
+                  decoration: BoxDecoration(
+                    color: AppColors.success,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: Colors.white, width: 2),
+                  ),
+                ),
+              ),
+          ],
         ),
         title: Text(
           contact.displayName,
           style: const TextStyle(fontWeight: FontWeight.w700),
         ),
-        subtitle: Text(trailing, maxLines: 1, overflow: TextOverflow.ellipsis),
+        subtitle: Text(
+          trailing,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: TextStyle(
+            color: online ? AppColors.success : AppColors.muted,
+            fontSize: 12,
+          ),
+        ),
         trailing: const Icon(
           Icons.chevron_right_rounded,
           size: 20,
@@ -979,10 +1296,10 @@ class _EmptyState extends StatelessWidget {
               width: 64,
               height: 64,
               decoration: BoxDecoration(
-                color: const Color(0xFF1D1830),
+                color: AppColors.accentPale,
                 borderRadius: BorderRadius.circular(20),
               ),
-              child: Icon(icon, size: 28, color: AppColors.accentSoft),
+              child: Icon(icon, size: 28, color: AppColors.accent),
             ),
             const SizedBox(height: 16),
             Text(

@@ -2,30 +2,31 @@ import 'package:flutter/material.dart';
 
 /// Product colors shared by the Flutter UI and the approved design mock-up.
 abstract final class AppColors {
-  static const canvas = Color(0xFF0B0B0F);
-  static const surface = Color(0xFF121217);
-  static const raised = Color(0xFF1A1A22);
-  static const interactive = Color(0xFF24242E);
-  static const line = Color(0xFF2C2C38);
-  static const text = Color(0xFFF6F5FA);
-  static const muted = Color(0xFF9B99A8);
-  static const faint = Color(0xFF6E6B79);
-  static const accent = Color(0xFF7C5CFF);
-  static const accentSoft = Color(0xFFA88FFF);
-  static const accentDeep = Color(0xFF4D36B6);
-  static const success = Color(0xFF42D392);
-  static const queued = Color(0xFFF7B84B);
-  static const error = Color(0xFFFF5D6C);
+  static const canvas = Color(0xFFFFFFFF);
+  static const surface = Color(0xFFFFFFFF);
+  static const raised = Color(0xFFFFFFFF);
+  static const interactive = Color(0xFFEEF2F5);
+  static const line = Color(0xFFE4E9ED);
+  static const text = Color(0xFF17212B);
+  static const muted = Color(0xFF6D7882);
+  static const faint = Color(0xFF9AA4AD);
+  static const accent = Color(0xFF2B9FD3);
+  static const accentSoft = Color(0xFF5CB9DE);
+  static const accentDeep = Color(0xFF197EAF);
+  static const accentPale = Color(0xFFDDF2FB);
+  static const success = Color(0xFF36A66A);
+  static const queued = Color(0xFFE89B26);
+  static const error = Color(0xFFD94A56);
 }
 
 ThemeData buildAppTheme() {
-  const scheme = ColorScheme.dark(
+  const scheme = ColorScheme.light(
     primary: AppColors.accent,
     onPrimary: Colors.white,
     primaryContainer: AppColors.accentDeep,
-    onPrimaryContainer: AppColors.text,
+    onPrimaryContainer: Colors.white,
     secondary: AppColors.accentSoft,
-    onSecondary: AppColors.canvas,
+    onSecondary: Colors.white,
     surface: AppColors.surface,
     onSurface: AppColors.text,
     error: AppColors.error,
@@ -42,7 +43,7 @@ ThemeData buildAppTheme() {
 
   return ThemeData(
     useMaterial3: true,
-    brightness: Brightness.dark,
+    brightness: Brightness.light,
     colorScheme: scheme,
     scaffoldBackgroundColor: AppColors.canvas,
     canvasColor: AppColors.canvas,
@@ -113,11 +114,11 @@ ThemeData buildAppTheme() {
       contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.all(Radius.circular(14)),
-        borderSide: BorderSide(color: AppColors.line),
+        borderSide: BorderSide.none,
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.all(Radius.circular(14)),
-        borderSide: BorderSide(color: AppColors.line),
+        borderSide: BorderSide.none,
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.all(Radius.circular(14)),
@@ -172,21 +173,36 @@ ThemeData buildAppTheme() {
         shape: const CircleBorder(),
       ),
     ),
-    navigationBarTheme: const NavigationBarThemeData(
-      height: 72,
+    navigationBarTheme: NavigationBarThemeData(
+      height: 64,
       elevation: 0,
-      backgroundColor: AppColors.raised,
-      indicatorColor: AppColors.accentDeep,
-      iconTheme: WidgetStatePropertyAll(IconThemeData(size: 22)),
-      labelTextStyle: WidgetStatePropertyAll(
-        TextStyle(fontSize: 11, fontWeight: FontWeight.w700),
+      backgroundColor: AppColors.surface,
+      indicatorColor: Colors.transparent,
+      iconTheme: WidgetStateProperty.resolveWith(
+        (states) => IconThemeData(
+          size: 22,
+          color: states.contains(WidgetState.selected)
+              ? AppColors.accent
+              : AppColors.muted,
+        ),
+      ),
+      labelTextStyle: WidgetStateProperty.resolveWith(
+        (states) => TextStyle(
+          color: states.contains(WidgetState.selected)
+              ? AppColors.accentDeep
+              : AppColors.muted,
+          fontSize: 11,
+          fontWeight: states.contains(WidgetState.selected)
+              ? FontWeight.w700
+              : FontWeight.w500,
+        ),
       ),
     ),
     navigationRailTheme: const NavigationRailThemeData(
       elevation: 0,
       backgroundColor: AppColors.surface,
-      indicatorColor: AppColors.accentDeep,
-      selectedIconTheme: IconThemeData(color: Colors.white),
+      indicatorColor: AppColors.accentPale,
+      selectedIconTheme: IconThemeData(color: AppColors.accent),
       unselectedIconTheme: IconThemeData(color: AppColors.muted),
       selectedLabelTextStyle: TextStyle(
         color: AppColors.text,
@@ -198,12 +214,12 @@ ThemeData buildAppTheme() {
       style: ButtonStyle(
         backgroundColor: WidgetStateProperty.resolveWith(
           (states) => states.contains(WidgetState.selected)
-              ? AppColors.accentDeep
+              ? AppColors.accentPale
               : AppColors.interactive,
         ),
         foregroundColor: WidgetStateProperty.resolveWith(
           (states) => states.contains(WidgetState.selected)
-              ? AppColors.text
+              ? AppColors.accentDeep
               : AppColors.muted,
         ),
         side: const WidgetStatePropertyAll(BorderSide.none),
@@ -232,8 +248,8 @@ ThemeData buildAppTheme() {
       ),
     ),
     snackBarTheme: const SnackBarThemeData(
-      backgroundColor: AppColors.interactive,
-      contentTextStyle: TextStyle(color: AppColors.text),
+      backgroundColor: AppColors.text,
+      contentTextStyle: TextStyle(color: Colors.white),
       behavior: SnackBarBehavior.floating,
     ),
   );

@@ -410,7 +410,11 @@ class _MiniMark extends StatelessWidget {
         color: AppColors.accent,
         borderRadius: BorderRadius.circular(11),
       ),
-      child: const Icon(Icons.chat_bubble_outline_rounded, size: 18),
+      child: const Icon(
+        Icons.chat_bubble_outline_rounded,
+        size: 18,
+        color: Colors.white,
+      ),
     );
   }
 }
@@ -429,13 +433,17 @@ class _HeroMark extends StatelessWidget {
           borderRadius: BorderRadius.circular(22),
           boxShadow: const [
             BoxShadow(
-              color: Color(0x397C5CFF),
+              color: Color(0x382B9FD3),
               blurRadius: 38,
               spreadRadius: 4,
             ),
           ],
         ),
-        child: const Icon(Icons.chat_bubble_outline_rounded, size: 32),
+        child: const Icon(
+          Icons.chat_bubble_outline_rounded,
+          size: 32,
+          color: Colors.white,
+        ),
       ),
     );
   }
@@ -524,14 +532,14 @@ class _Notice extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFF1D1827),
-        border: Border.all(color: AppColors.accentDeep),
+        color: AppColors.accentPale,
+        border: Border.all(color: AppColors.accentSoft),
         borderRadius: BorderRadius.circular(16),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, size: 21, color: AppColors.accentSoft),
+          Icon(icon, size: 21, color: AppColors.accent),
           const SizedBox(width: 12),
           Expanded(child: Text(text)),
         ],

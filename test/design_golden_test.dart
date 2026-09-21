@@ -11,6 +11,7 @@ import 'package:p2p_messenger/src/core/messaging/message_repository.dart';
 import 'package:p2p_messenger/src/core/transport/transport_router.dart';
 import 'package:p2p_messenger/src/data/local_vault.dart';
 import 'package:p2p_messenger/src/ui/add_contact_screen.dart';
+import 'package:p2p_messenger/src/ui/chat_screen.dart';
 import 'package:p2p_messenger/src/ui/home_shell.dart';
 import 'package:p2p_messenger/src/ui/invite_code_panel.dart';
 import 'package:p2p_messenger/src/ui/onboarding_screen.dart';
@@ -96,6 +97,76 @@ void main() {
     await expectLater(
       find.byType(HomeShell),
       matchesGoldenFile('goldens/android_chats.png'),
+    );
+  });
+
+  testWidgets('approved contacts list', (tester) async {
+    await setPhone(tester);
+    final controller = _previewController(identity);
+    addTearDown(controller.dispose);
+    await tester.pumpWidget(
+      MaterialApp(
+        debugShowCheckedModeBanner: false,
+        theme: buildAppTheme(),
+        home: HomeShell(controller: controller),
+      ),
+    );
+    await tester.tap(
+      find.descendant(
+        of: find.byType(NavigationBar),
+        matching: find.text('Контакты'),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await expectLater(
+      find.byType(HomeShell),
+      matchesGoldenFile('goldens/android_contacts.png'),
+    );
+  });
+
+  testWidgets('approved conversation', (tester) async {
+    await setPhone(tester);
+    final controller = _previewController(identity);
+    addTearDown(controller.dispose);
+    await tester.pumpWidget(
+      MaterialApp(
+        debugShowCheckedModeBanner: false,
+        theme: buildAppTheme(),
+        home: HomeShell(controller: controller),
+      ),
+    );
+    await tester.tap(find.text('Маша К.'));
+    await tester.pumpAndSettle();
+
+    await expectLater(
+      find.byType(ChatScreen),
+      matchesGoldenFile('goldens/android_conversation.png'),
+    );
+  });
+
+  testWidgets('approved profile', (tester) async {
+    await setPhone(tester);
+    final controller = _previewController(identity);
+    addTearDown(controller.dispose);
+    await tester.pumpWidget(
+      MaterialApp(
+        debugShowCheckedModeBanner: false,
+        theme: buildAppTheme(),
+        home: HomeShell(controller: controller),
+      ),
+    );
+    await tester.tap(
+      find.descendant(
+        of: find.byType(NavigationBar),
+        matching: find.text('Профиль'),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await expectLater(
+      find.byType(HomeShell),
+      matchesGoldenFile('goldens/android_profile.png'),
     );
   });
 
@@ -245,6 +316,14 @@ AppController _previewController(AnonymousIdentity identity) {
       body: 'Увидимся вечером?',
       direction: MessageDirection.incoming,
       createdAt: DateTime(2026, 9, 21, 14, 2),
+      status: MessageStatus.delivered,
+    ),
+    ChatMessage(
+      id: '4',
+      contactId: 'masha',
+      body: 'Да, вижу тебя по LAN',
+      direction: MessageDirection.outgoing,
+      createdAt: DateTime(2026, 9, 21, 14, 33),
       status: MessageStatus.delivered,
     ),
     ChatMessage(

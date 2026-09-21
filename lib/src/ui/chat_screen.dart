@@ -93,27 +93,42 @@ class _ChatScreenState extends State<ChatScreen> {
                   child: Center(
                     child: ConstrainedBox(
                       constraints: const BoxConstraints(maxWidth: 920),
-                      child: messages.isEmpty
-                          ? _ChatEmpty(
-                              contactName: widget.contact.displayName,
-                              cryptoInfo: widget.controller.cryptoInfo,
-                            )
-                          : ListView.builder(
-                              reverse: true,
-                              padding: const EdgeInsets.fromLTRB(
-                                16,
-                                12,
-                                16,
-                                14,
+                      child: Stack(
+                        children: [
+                          const Positioned.fill(
+                            child: IgnorePointer(
+                              child: CustomPaint(
+                                painter: _ChatBackdropPainter(),
                               ),
-                              itemCount: messages.length,
-                              itemBuilder: (context, index) {
-                                return _MessageBubble(
-                                  message:
-                                      messages[messages.length - index - 1],
-                                );
-                              },
                             ),
+                          ),
+                          Positioned.fill(
+                            child: messages.isEmpty
+                                ? _ChatEmpty(
+                                    contactName: widget.contact.displayName,
+                                    cryptoInfo: widget.controller.cryptoInfo,
+                                  )
+                                : ListView.builder(
+                                    reverse: true,
+                                    padding: const EdgeInsets.fromLTRB(
+                                      16,
+                                      12,
+                                      16,
+                                      14,
+                                    ),
+                                    itemCount: messages.length,
+                                    itemBuilder: (context, index) {
+                                      return _MessageBubble(
+                                        message:
+                                            messages[messages.length -
+                                                index -
+                                                1],
+                                      );
+                                    },
+                                  ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
@@ -177,6 +192,31 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 }
 
+class _ChatBackdropPainter extends CustomPainter {
+  const _ChatBackdropPainter();
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final dot = Paint()..color = AppColors.accent.withValues(alpha: 0.055);
+    final ring = Paint()
+      ..color = AppColors.accent.withValues(alpha: 0.035)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1;
+    for (var y = 24.0; y < size.height; y += 68) {
+      final row = (y / 68).floor();
+      for (var x = row.isEven ? 30.0 : 64.0; x < size.width; x += 94) {
+        canvas.drawCircle(Offset(x, y), 2, dot);
+        if ((x + y).round().isEven) {
+          canvas.drawCircle(Offset(x + 18, y + 18), 8, ring);
+        }
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _ChatBackdropPainter oldDelegate) => false;
+}
+
 class _ChatEmpty extends StatelessWidget {
   const _ChatEmpty({required this.contactName, required this.cryptoInfo});
 
@@ -197,12 +237,12 @@ class _ChatEmpty extends StatelessWidget {
                 width: 52,
                 height: 52,
                 decoration: BoxDecoration(
-                  color: const Color(0xFF1D1830),
+                  color: AppColors.accentPale,
                   borderRadius: BorderRadius.circular(16),
                 ),
                 child: const Icon(
                   Icons.lock_outline_rounded,
-                  color: AppColors.accentSoft,
+                  color: AppColors.accent,
                 ),
               ),
               const SizedBox(height: 18),
@@ -266,7 +306,9 @@ class _MessageBubble extends StatelessWidget {
               alignment: Alignment.centerLeft,
               child: SelectableText(
                 message.body,
-                style: const TextStyle(color: AppColors.text),
+                style: TextStyle(
+                  color: outgoing ? Colors.white : AppColors.text,
+                ),
               ),
             ),
             const SizedBox(height: 5),
@@ -288,27 +330,31 @@ class _MessageMeta extends StatelessWidget {
     final time = message.createdAt.toLocal();
     final status = _statusPresentation(message.status);
     final error = message.status == MessageStatus.failed;
+    final outgoing = message.direction == MessageDirection.outgoing;
+    final metaColor = outgoing
+        ? Colors.white.withValues(alpha: 0.78)
+        : AppColors.muted;
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
         Text(
           '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}',
-          style: Theme.of(context).textTheme.bodySmall,
+          style: Theme.of(
+            context,
+          ).textTheme.bodySmall?.copyWith(color: metaColor),
         ),
         if (message.direction == MessageDirection.outgoing) ...[
           const SizedBox(width: 6),
           Icon(
             status.icon,
             size: 14,
-            color: error
-                ? Theme.of(context).colorScheme.error
-                : Theme.of(context).colorScheme.primary,
+            color: error && !outgoing ? AppColors.error : metaColor,
           ),
           const SizedBox(width: 3),
           Text(
             status.label,
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: error ? Theme.of(context).colorScheme.error : null,
+              color: error && !outgoing ? AppColors.error : metaColor,
             ),
           ),
         ],
@@ -423,7 +469,7 @@ class _EncryptionPill extends StatelessWidget {
         margin: const EdgeInsets.only(top: 4, bottom: 6),
         padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 7),
         decoration: BoxDecoration(
-          color: const Color(0xFF211B32),
+          color: AppColors.accentPale,
           borderRadius: BorderRadius.circular(18),
         ),
         child: Row(
@@ -432,14 +478,14 @@ class _EncryptionPill extends StatelessWidget {
             const Icon(
               Icons.lock_outline_rounded,
               size: 15,
-              color: AppColors.accentSoft,
+              color: AppColors.accent,
             ),
             const SizedBox(width: 7),
             Text(
               'Зашифровано · $label',
               style: Theme.of(
                 context,
-              ).textTheme.labelMedium?.copyWith(color: AppColors.accentSoft),
+              ).textTheme.labelMedium?.copyWith(color: AppColors.accentDeep),
             ),
           ],
         ),

@@ -145,7 +145,9 @@ class _AddContactScreenState extends State<AddContactScreen> {
                     placeholderBuilder: (_) => const ColoredBox(
                       color: AppColors.raised,
                       child: Center(
-                        child: CircularProgressIndicator(color: Colors.white),
+                        child: CircularProgressIndicator(
+                          color: AppColors.accent,
+                        ),
                       ),
                     ),
                     errorBuilder: (_, error) => _ScannerError(
@@ -424,9 +426,7 @@ class _ScannerError extends StatelessWidget {
                       ? 'Нет доступа к камере'
                       : 'Камера недоступна',
                   textAlign: TextAlign.center,
-                  style: Theme.of(
-                    context,
-                  ).textTheme.titleLarge?.copyWith(color: Colors.white),
+                  style: Theme.of(context).textTheme.titleLarge,
                 ),
                 const SizedBox(height: 8),
                 Text(
@@ -444,7 +444,9 @@ class _ScannerError extends StatelessWidget {
                 const SizedBox(height: 6),
                 TextButton(
                   onPressed: onRetry,
-                  style: TextButton.styleFrom(foregroundColor: Colors.white),
+                  style: TextButton.styleFrom(
+                    foregroundColor: AppColors.accent,
+                  ),
                   child: const Text('Попробовать снова'),
                 ),
               ],
@@ -464,18 +466,14 @@ class _PublicCodeNotice extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: const Color(0xFF17151F),
-        border: Border.all(color: AppColors.accentDeep),
+        color: AppColors.accentPale,
+        border: Border.all(color: AppColors.accentSoft),
         borderRadius: BorderRadius.circular(16),
       ),
       child: const Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(
-            Icons.verified_user_outlined,
-            color: AppColors.accentSoft,
-            size: 20,
-          ),
+          Icon(Icons.verified_user_outlined, color: AppColors.accent, size: 20),
           SizedBox(width: 11),
           Expanded(
             child: Text(
