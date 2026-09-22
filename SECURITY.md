@@ -31,7 +31,6 @@ The current source documentation already treats these as shipping blockers:
 
 - static-key MVP cryptography without Double Ratchet;
 - incomplete relay admission, ownership, quota, and abuse controls;
-- no mandatory HTTPS policy in the client yet;
 - incomplete hostile-input/resource limits;
 - debug Android signing configuration;
 - recovery export through the system clipboard;
@@ -39,4 +38,3 @@ The current source documentation already treats these as shipping blockers:
 
 Reports that demonstrate a new exploit path or materially stronger impact are
 still welcome.
-

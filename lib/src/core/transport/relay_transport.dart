@@ -5,6 +5,7 @@ import '../identity/anonymous_identity.dart';
 import '../messaging/chat_message.dart';
 import '../messaging/encrypted_packet.dart';
 import 'delivery_transport.dart';
+import 'relay_endpoint_policy.dart';
 
 typedef ContactLookup = Contact? Function(String userId);
 
@@ -14,7 +15,11 @@ class RelayTransport implements DeliveryTransport {
     required AnonymousIdentity identity,
     required ContactLookup findContact,
     HttpClient? client,
-  }) : _baseUri = baseUri,
+    bool allowInsecure = false,
+  }) : _baseUri = RelayEndpointPolicy.parse(
+         baseUri.toString(),
+         allowInsecure: allowInsecure,
+       ),
        _identity = identity,
        _findContact = findContact,
        _client = client ?? HttpClient();
@@ -131,7 +136,10 @@ class RelayTransport implements DeliveryTransport {
     String? bearerToken,
     Map<String, Object?>? body,
   }) async {
-    final request = await _client.openUrl(method, _baseUri.resolve(path));
+    final request = await _client
+        .openUrl(method, _baseUri.resolve(path))
+        .timeout(const Duration(seconds: 8));
+    request.followRedirects = false;
     request.headers.set(HttpHeaders.acceptHeader, 'application/json');
     if (bearerToken != null) {
       request.headers.set(
@@ -144,8 +152,34 @@ class RelayTransport implements DeliveryTransport {
       request.write(jsonEncode(body));
     }
     final response = await request.close().timeout(const Duration(seconds: 8));
-    final responseBody = await utf8.decoder.bind(response).join();
+    if (response.isRedirect) {
+      await response.drain<void>();
+      throw const HttpException('Relay redirects are not allowed.');
+    }
+    final responseBytes = await _readBounded(
+      response,
+      maxBytes: method == 'GET' ? 4 * 1024 * 1024 : 256 * 1024,
+    );
+    final responseBody = utf8.decode(responseBytes);
     return _RelayResponse(response.statusCode, responseBody);
+  }
+
+  Future<List<int>> _readBounded(
+    HttpClientResponse response, {
+    required int maxBytes,
+  }) async {
+    if (response.contentLength > maxBytes) {
+      await response.drain<void>();
+      throw const FormatException('Relay response is too large.');
+    }
+    final bytes = <int>[];
+    await for (final chunk in response.timeout(const Duration(seconds: 8))) {
+      if (bytes.length + chunk.length > maxBytes) {
+        throw const FormatException('Relay response is too large.');
+      }
+      bytes.addAll(chunk);
+    }
+    return bytes;
   }
 }
 

@@ -71,11 +71,13 @@ void main() {
         baseUri: relayUri,
         identity: alice,
         findContact: (id) => id == bob.userId ? bobForAlice : null,
+        allowInsecure: true,
       );
       final bobRelay = RelayTransport(
         baseUri: relayUri,
         identity: bob,
         findContact: (id) => id == alice.userId ? aliceForBob : null,
+        allowInsecure: true,
       );
       addTearDown(() {
         aliceRelay.close(force: true);
@@ -181,6 +183,7 @@ AppController _buildController({
     cryptoEngine: MvpCryptoEngine(),
     transportRouter: TransportRouter([LocalOutboxTransport(messages)]),
     relayUrl: relayUrl,
+    allowInsecureRelay: true,
     enableNearby: false,
   );
 }

@@ -32,6 +32,7 @@ number of copies using a spray-and-wait policy.
 - `core/crypto`: swappable message crypto engine;
 - `core/messaging`: transport-neutral records and persistence;
 - `core/transport`: delivery adapters and routing policy;
+- `core/update`: GitHub release validation and Android update coordination;
 - `data`: encrypted local value store;
 - `ui`: responsive Material client.
 
@@ -52,3 +53,15 @@ in an in-memory registry. `TransportRouter` then tries an HTTP POST containing
 the already encrypted `EncryptedPacket`. The receiver only returns success if
 the sender is a saved contact and authenticated decryption succeeds. Relay
 mailbox capabilities are never sent over this plaintext LAN carrier.
+
+## Internet relay configuration
+
+The relay origin can come from a compile-time default or encrypted local app
+settings. User-configured and normal release endpoints must use HTTPS and may
+not contain credentials, a path, query, or fragment. Plain HTTP is accepted only
+when the explicit `ALLOW_INSECURE_RELAY` development flag is compiled in.
+
+Changing the relay closes the previous client, replaces the router adapter,
+registers the local mailbox, and immediately retries the encrypted outbox. Relay
+responses are bounded and time-limited before JSON decoding. No public relay is
+bundled with the app; the current Node server remains development-only.

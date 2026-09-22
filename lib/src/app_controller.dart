@@ -11,9 +11,11 @@ import 'core/messaging/encrypted_packet.dart';
 import 'core/messaging/message_repository.dart';
 import 'core/transport/delivery_transport.dart';
 import 'core/transport/nearby_runtime.dart';
+import 'core/transport/relay_endpoint_policy.dart';
 import 'core/transport/relay_transport.dart';
 import 'core/transport/transport_router.dart';
 import 'core/update/update_coordinator.dart';
+import 'data/app_settings_repository.dart';
 
 class AppController extends ChangeNotifier {
   AppController({
@@ -22,13 +24,17 @@ class AppController extends ChangeNotifier {
     required CryptoEngine cryptoEngine,
     required TransportRouter transportRouter,
     required String relayUrl,
+    AppSettingsRepository? settingsRepository,
+    bool allowInsecureRelay = false,
     UpdateCoordinator? updateCoordinator,
     bool enableNearby = true,
   }) : _identityService = identityService,
        _messageRepository = messageRepository,
        _cryptoEngine = cryptoEngine,
        _transportRouter = transportRouter,
-       _relayUrl = relayUrl,
+       _relayUrl = relayUrl.trim(),
+       _settingsRepository = settingsRepository,
+       _allowInsecureRelay = allowInsecureRelay,
        _enableNearby = enableNearby {
     updates = updateCoordinator ?? UpdateCoordinator.disabled();
     updates.addListener(_onUpdateChanged);
@@ -38,7 +44,9 @@ class AppController extends ChangeNotifier {
   final MessageRepository _messageRepository;
   final CryptoEngine _cryptoEngine;
   final TransportRouter _transportRouter;
-  final String _relayUrl;
+  String _relayUrl;
+  final AppSettingsRepository? _settingsRepository;
+  final bool _allowInsecureRelay;
   final bool _enableNearby;
   late final UpdateCoordinator updates;
   final Uuid _uuid = const Uuid();
@@ -53,10 +61,12 @@ class AppController extends ChangeNotifier {
   bool _syncing = false;
   bool _disposed = false;
   String? nearbyError;
+  String? relayError;
   final Set<String> _processingIncoming = {};
 
   bool get relayConfigured => _relayUrl.isNotEmpty;
   bool get relayReady => _relayTransport?.state == TransportState.ready;
+  String get relayUrl => _relayUrl;
   bool get nearbyReady => _nearbyRuntime != null;
   int get nearbyPeerCount => _nearbyRuntime?.peerCount ?? 0;
   CryptoEngineInfo get cryptoInfo => _cryptoEngine.info;
@@ -69,6 +79,8 @@ class AppController extends ChangeNotifier {
     identity = await _identityService.load();
     contacts = await _messageRepository.loadContacts();
     messages = await _messageRepository.loadMessages();
+    final storedRelayUrl = await _settingsRepository?.loadRelayUrl();
+    if (storedRelayUrl != null) _relayUrl = storedRelayUrl.trim();
     if (_enableNearby) {
       final runtime = NearbyRuntime(
         identity: identity,
@@ -85,27 +97,9 @@ class AppController extends ChangeNotifier {
         _nearbyRuntime = null;
       }
     }
-    if (_relayUrl.isNotEmpty) {
-      final relay = RelayTransport(
-        baseUri: Uri.parse(_relayUrl),
-        identity: identity,
-        findContact: _findContact,
-      );
-      _relayTransport = relay;
-      try {
-        await relay.registerMailbox();
-        _transportRouter.addTransport(relay);
-      } catch (_) {
-        // Offline startup is expected. The local outbox remains available.
-      }
-    }
+    await _startRelay();
     await _syncTransports();
-    if (_nearbyRuntime != null || _relayTransport != null) {
-      _pollTimer = Timer.periodic(
-        const Duration(seconds: 5),
-        (_) => unawaited(_syncTransports()),
-      );
-    }
+    _ensurePollTimer();
     initialized = true;
     notifyListeners();
     unawaited(updates.check());
@@ -116,6 +110,61 @@ class AppController extends ChangeNotifier {
       if (contact.userId == userId) return contact;
     }
     return null;
+  }
+
+  Future<void> _startRelay() async {
+    if (_relayUrl.isEmpty) return;
+    try {
+      final baseUri = RelayEndpointPolicy.parse(
+        _relayUrl,
+        allowInsecure: _allowInsecureRelay,
+      );
+      final relay = RelayTransport(
+        baseUri: baseUri,
+        identity: identity,
+        findContact: _findContact,
+        allowInsecure: _allowInsecureRelay,
+      );
+      _relayTransport = relay;
+      await relay.registerMailbox();
+      _transportRouter.addTransport(relay);
+      relayError = null;
+    } on FormatException catch (error) {
+      relayError = error.message;
+      _relayTransport = null;
+    } catch (_) {
+      relayError = 'Relay настроен, но сейчас недоступен.';
+      // Keep the transport instance so the periodic synchronizer can retry.
+    }
+  }
+
+  Future<void> configureRelay(String rawUrl) async {
+    final next = rawUrl.trim();
+    if (next.isNotEmpty) {
+      RelayEndpointPolicy.parse(next, allowInsecure: _allowInsecureRelay);
+    }
+    final previous = _relayTransport;
+    _relayTransport = null;
+    _transportRouter.removeTransport(TransportKind.internetRelay);
+    previous?.close(force: true);
+    _relayUrl = next;
+    relayError = null;
+    await _settingsRepository?.saveRelayUrl(next);
+    await _startRelay();
+    _ensurePollTimer();
+    await _syncTransports();
+    notifyListeners();
+  }
+
+  void _ensurePollTimer() {
+    if (_pollTimer != null ||
+        (_nearbyRuntime == null && _relayTransport == null)) {
+      return;
+    }
+    _pollTimer = Timer.periodic(
+      const Duration(seconds: 5),
+      (_) => unawaited(_syncTransports()),
+    );
   }
 
   void _onNearbyPeersChanged() {
@@ -139,7 +188,9 @@ class AppController extends ChangeNotifier {
         try {
           await relay.registerMailbox();
           _transportRouter.addTransport(relay);
+          relayError = null;
         } catch (_) {
+          relayError = 'Relay настроен, но сейчас недоступен.';
           // Nearby and the local outbox remain available without the relay.
         }
       }

@@ -10,6 +10,7 @@ import 'src/core/transport/local_outbox_transport.dart';
 import 'src/core/transport/transport_router.dart';
 import 'src/core/update/update_coordinator.dart';
 import 'src/data/local_vault.dart';
+import 'src/data/app_settings_repository.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -26,6 +27,7 @@ Future<void> main() async {
   final vault = LocalVault();
   final identityService = IdentityService(vault);
   final messages = MessageRepository(vault);
+  final settings = AppSettingsRepository(vault);
   runApp(
     P2PMessengerApp(
       identityService: identityService,
@@ -36,6 +38,10 @@ Future<void> main() async {
           cryptoEngine: MvpCryptoEngine(),
           transportRouter: TransportRouter([LocalOutboxTransport(messages)]),
           relayUrl: const String.fromEnvironment('RELAY_URL'),
+          settingsRepository: settings,
+          allowInsecureRelay: const bool.fromEnvironment(
+            'ALLOW_INSECURE_RELAY',
+          ),
           updateCoordinator: UpdateCoordinator(),
         );
         await controller.initialize();

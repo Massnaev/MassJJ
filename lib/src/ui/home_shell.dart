@@ -579,6 +579,12 @@ class _ProfilePageState extends State<_ProfilePage> {
                 : 'Зашифрованная локальная очередь',
             icon: Icons.route_rounded,
           ),
+          _RelaySettingsRow(
+            configuredUrl: widget.controller.relayUrl,
+            ready: widget.controller.relayReady,
+            error: widget.controller.relayError,
+            onTap: _configureRelay,
+          ),
           if (_showInvite)
             Padding(
               padding: const EdgeInsets.fromLTRB(14, 14, 14, 0),
@@ -650,6 +656,104 @@ class _ProfilePageState extends State<_ProfilePage> {
     ScaffoldMessenger.of(
       context,
     ).showSnackBar(SnackBar(content: Text(confirmation)));
+  }
+
+  Future<void> _configureRelay() async {
+    final input = TextEditingController(text: widget.controller.relayUrl);
+    final value = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Интернет relay'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Введите HTTPS-адрес совместимого сервера. Пустое поле отключает доставку через интернет.',
+            ),
+            const SizedBox(height: 14),
+            TextField(
+              controller: input,
+              keyboardType: TextInputType.url,
+              autocorrect: false,
+              decoration: const InputDecoration(
+                hintText: 'https://relay.example.org',
+                prefixIcon: Icon(Icons.cloud_outlined),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Отмена'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, input.text),
+            child: const Text('Сохранить'),
+          ),
+        ],
+      ),
+    );
+    input.dispose();
+    if (value == null || !mounted) return;
+    try {
+      await widget.controller.configureRelay(value);
+      if (!mounted) return;
+      final message = value.trim().isEmpty
+          ? 'Интернет relay отключён'
+          : widget.controller.relayReady
+          ? 'Relay подключён, очередь синхронизируется'
+          : 'Адрес сохранён. Подключение будет повторено автоматически.';
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(message)));
+    } on FormatException catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(error.message.toString())));
+    }
+  }
+}
+
+class _RelaySettingsRow extends StatelessWidget {
+  const _RelaySettingsRow({
+    required this.configuredUrl,
+    required this.ready,
+    required this.error,
+    required this.onTap,
+  });
+
+  final String configuredUrl;
+  final bool ready;
+  final String? error;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final value = configuredUrl.isEmpty
+        ? 'Не настроен · сообщения остаются в очереди'
+        : ready
+        ? 'Подключён · ${Uri.parse(configuredUrl).host}'
+        : error ?? 'Ожидаем подключения · ${Uri.parse(configuredUrl).host}';
+    return Material(
+      color: AppColors.surface,
+      child: ListTile(
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 3),
+        leading: Icon(
+          ready ? Icons.cloud_done_outlined : Icons.cloud_off_outlined,
+          color: ready ? AppColors.success : AppColors.queued,
+        ),
+        title: const Text(
+          'Интернет relay',
+          style: TextStyle(fontWeight: FontWeight.w600),
+        ),
+        subtitle: Text(value, maxLines: 2, overflow: TextOverflow.ellipsis),
+        trailing: const Icon(Icons.chevron_right_rounded),
+        onTap: onTap,
+      ),
+    );
   }
 }
 

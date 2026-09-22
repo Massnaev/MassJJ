@@ -23,6 +23,8 @@ This document is the continuity source for any AI or human continuing MassJJ.
 - development-only X25519 + HKDF-SHA256 + AES-GCM message envelopes;
 - persistent messages, contacts, and encrypted outbox;
 - transport router: nearby LAN, optional relay, local outbox;
+- persistent in-app HTTPS relay configuration with immediate reconnect and
+  encrypted-outbox retry;
 - contact-scoped rotating mDNS discovery tags;
 - bounded nearby HTTP inbox with authenticated decryption before persistence;
 - Android network policy permits cleartext LAN HTTP for dynamic peer IPs while
@@ -32,7 +34,7 @@ This document is the continuity source for any AI or human continuing MassJJ.
 - Node.js opaque relay with split read/write mailbox capabilities;
 - light Android UI with chats, contacts, conversation, invite, profile, and
   update-banner states;
-- 27 Flutter tests, golden screenshots, relay tests, and relay end-to-end coverage.
+- 30 Flutter tests, golden screenshots, relay tests, and relay end-to-end coverage.
 
 ## Important paths
 
@@ -41,6 +43,7 @@ This document is the continuity source for any AI or human continuing MassJJ.
 - `lib/src/core/identity/` — identity, recovery, and invitation codecs;
 - `lib/src/core/transport/` — relay, nearby, outbox, and routing;
 - `lib/src/data/local_vault.dart` — encrypted local persistence;
+- `lib/src/data/app_settings_repository.dart` — persisted relay origin;
 - `server/relay.mjs` — development relay;
 - `lib/src/core/update/` — GitHub release validation, download, and installer coordination;
 - `docs/RELEASING.md` — signing and data-preserving release contract;
@@ -80,19 +83,30 @@ Latest verification after update support was added on 2026-09-22:
   and LAN network-security configuration;
 - physical Android update installation: not yet tested.
 
+Latest verification after persistent relay configuration was added on
+2026-09-22:
+
+- Flutter analyze: no issues;
+- Flutter tests: 30 passed, including the updated profile golden;
+- relay server tests: 3 passed;
+- relay end-to-end tests: 2 passed;
+- Android APK: built successfully, 66.3 MB;
+- physical two-device LAN and mobile-network delivery: not yet retested.
+
 ## Security posture
 
 The current protocol and relay are not production-ready. A standard static audit
 completed on 2026-09-21 with seven validated findings: one high, five medium,
-and one low. The main open areas are:
+and one low. Two client transport findings were addressed on 2026-09-22 by
+enforcing HTTPS unless an explicit insecure development flag is compiled in,
+disabling redirects, and bounding/timing relay response reads. The remaining
+open areas are:
 
 1. publicly exposed relay state can be exhausted without global quotas;
 2. first mailbox registration is not bound to proof of identity ownership;
 3. one shared write capability can flood and evict unrelated queued messages;
-4. the client does not yet enforce HTTPS for non-loopback relays;
-5. relay responses lack a body-size and body-read deadline;
-6. imported X25519 keys need low-order/all-zero validation;
-7. copied recovery credentials are not cleared from the system clipboard.
+4. imported X25519 keys need low-order/all-zero validation;
+5. copied recovery credentials are not cleared from the system clipboard.
 
 Additional release blockers:
 
@@ -112,13 +126,12 @@ Do not hide these limitations in public messaging. See `SECURITY.md` and
 
 ## Next recommended work
 
-1. Enforce HTTPS except for explicit debug loopback relay URLs.
-2. Add bounded streaming relay responses and tests.
-3. Reject low-order X25519 keys and all-zero shared secrets.
-4. Redesign mailbox provisioning and per-contact write capabilities.
-5. Add relay quotas/rate limits and transactional persistence.
-6. Test the alpha on two physical Android devices over LAN and relay paths.
-7. Create, back up, and test the stable production signing key before the first
+1. Reject low-order X25519 keys and all-zero shared secrets.
+2. Redesign mailbox provisioning and per-contact write capabilities.
+3. Add relay quotas/rate limits and transactional persistence.
+4. Deploy a production HTTPS relay only after those server blockers are fixed.
+5. Test the alpha on two physical Android devices over LAN and relay paths.
+6. Create, back up, and test the stable production signing key before the first
    GitHub binary release.
 
 ## Change log
@@ -128,3 +141,4 @@ Do not hide these limitations in public messaging. See `SECURITY.md` and
 | 2026-09-21 | Prepared public repository metadata, AGPL licensing, contributor/security guidance, author support addresses, and mandatory AI continuity rules. | Secret screening and standard static security audit completed; existing Flutter/relay test results recorded above. |
 | 2026-09-21 | Enabled Android cleartext access required by the encrypted LAN transport and surfaced nearby startup failure in the transport banner. | `flutter analyze` clean; 24 Flutter tests passed; release APK built successfully (65.9 MB). |
 | 2026-09-22 | Added GitHub Releases update discovery, strict APK metadata/digest checks, Android installer handoff, update banner, release signing configuration, and release runbook. | `flutter analyze` clean; 27 Flutter tests passed; release APK built successfully (65.9 MB); merged manifest verified. |
+| 2026-09-22 | Added persistent in-app HTTPS relay configuration, immediate reconnect/outbox retry, redirect rejection, bounded relay responses, and a profile settings row. | `flutter analyze` clean; 30 Flutter tests, 3 relay tests, and 2 relay E2E tests passed; release APK built successfully (66.3 MB). |

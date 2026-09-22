@@ -14,6 +14,10 @@ class TransportRouter {
     _transports.sort((a, b) => a.priority.compareTo(b.priority));
   }
 
+  void removeTransport(TransportKind kind) {
+    _transports.removeWhere((item) => item.kind == kind);
+  }
+
   Future<DeliveryReceipt> send(EncryptedPacket packet) async {
     Object? lastError;
     StackTrace? lastStackTrace;
