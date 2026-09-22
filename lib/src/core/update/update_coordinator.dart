@@ -54,9 +54,18 @@ class UpdateCoordinator extends ChangeNotifier {
   double progress = 0;
   String? userMessage;
   bool _disposed = false;
+  DateTime? _lastCheckAt;
 
-  Future<void> check() async {
+  Future<void> check({bool force = false}) async {
     if (!_enabled || checking || installing) return;
+    final now = DateTime.now().toUtc();
+    final lastCheckAt = _lastCheckAt;
+    if (!force &&
+        lastCheckAt != null &&
+        now.difference(lastCheckAt) < const Duration(minutes: 15)) {
+      return;
+    }
+    _lastCheckAt = now;
     checking = true;
     _notify();
     try {

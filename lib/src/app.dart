@@ -24,7 +24,8 @@ class P2PMessengerApp extends StatefulWidget {
   State<P2PMessengerApp> createState() => _P2PMessengerAppState();
 }
 
-class _P2PMessengerAppState extends State<P2PMessengerApp> {
+class _P2PMessengerAppState extends State<P2PMessengerApp>
+    with WidgetsBindingObserver {
   AppController? _controller;
   Object? _startupError;
   bool _checkingIdentity = true;
@@ -33,7 +34,15 @@ class _P2PMessengerAppState extends State<P2PMessengerApp> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     unawaited(_bootstrap());
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      unawaited(_controller?.checkForUpdates());
+    }
   }
 
   Future<void> _bootstrap() async {
@@ -84,6 +93,7 @@ class _P2PMessengerAppState extends State<P2PMessengerApp> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _controller?.dispose();
     super.dispose();
   }

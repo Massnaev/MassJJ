@@ -58,6 +58,7 @@ class AppController extends ChangeNotifier {
   RelayTransport? _relayTransport;
   NearbyRuntime? _nearbyRuntime;
   Timer? _pollTimer;
+  Timer? _updateTimer;
   bool _syncing = false;
   bool _disposed = false;
   String? nearbyError;
@@ -103,6 +104,10 @@ class AppController extends ChangeNotifier {
     initialized = true;
     notifyListeners();
     unawaited(updates.check());
+    _updateTimer = Timer.periodic(
+      const Duration(hours: 3),
+      (_) => unawaited(updates.check(force: true)),
+    );
   }
 
   Contact? _findContact(String userId) {
@@ -178,6 +183,8 @@ class AppController extends ChangeNotifier {
   }
 
   Future<void> synchronize() => _syncTransports();
+
+  Future<void> checkForUpdates() => updates.check();
 
   Future<void> _syncTransports() async {
     final relay = _relayTransport;
@@ -282,6 +289,7 @@ class AppController extends ChangeNotifier {
   void dispose() {
     _disposed = true;
     _pollTimer?.cancel();
+    _updateTimer?.cancel();
     updates.removeListener(_onUpdateChanged);
     updates.dispose();
     unawaited(_nearbyRuntime?.close());

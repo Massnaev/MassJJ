@@ -30,7 +30,8 @@ This document is the continuity source for any AI or human continuing MassJJ.
 - Android network policy permits cleartext LAN HTTP for dynamic peer IPs while
   message envelopes remain encrypted and authenticated end to end;
 - GitHub Releases update check, SHA-256 verified APK download, and Android
-  system-installer handoff with an in-app update banner;
+  system-installer handoff with an in-app update banner; checks run at startup,
+  on app resume (15-minute minimum interval), and every three active hours;
 - Node.js opaque relay with split read/write mailbox capabilities;
 - light Android UI with chats, contacts, conversation, invite, profile, and
   update-banner states;
@@ -142,3 +143,4 @@ Do not hide these limitations in public messaging. See `SECURITY.md` and
 | 2026-09-21 | Enabled Android cleartext access required by the encrypted LAN transport and surfaced nearby startup failure in the transport banner. | `flutter analyze` clean; 24 Flutter tests passed; release APK built successfully (65.9 MB). |
 | 2026-09-22 | Added GitHub Releases update discovery, strict APK metadata/digest checks, Android installer handoff, update banner, release signing configuration, and release runbook. | `flutter analyze` clean; 27 Flutter tests passed; release APK built successfully (65.9 MB); merged manifest verified. |
 | 2026-09-22 | Added persistent in-app HTTPS relay configuration, immediate reconnect/outbox retry, redirect rejection, bounded relay responses, and a profile settings row. | `flutter analyze` clean; 30 Flutter tests, 3 relay tests, and 2 relay E2E tests passed; release APK built successfully (66.3 MB). |
+| 2026-09-22 | Added rate-limited GitHub update checks on app resume and a three-hour periodic check while active. | `flutter analyze` clean; 30 Flutter tests passed. |

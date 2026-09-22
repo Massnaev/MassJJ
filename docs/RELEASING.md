@@ -7,8 +7,10 @@ created, backed up securely, and tested on a disposable device.
 ## Update contract
 
 The installed app checks the public endpoint
-`/repos/Massnaev/MassJJ/releases/latest`. A release is offered only when all of
-these conditions are true:
+`/repos/Massnaev/MassJJ/releases/latest` at startup, when returning to the app,
+and every three hours while it remains active. Resume checks are rate-limited to
+once per 15 minutes. A release is offered only when all of these conditions are
+true:
 
 - the tag is a higher stable semantic version such as `v0.2.0`;
 - the release contains exactly named asset `MassJJ-android.apk`;
