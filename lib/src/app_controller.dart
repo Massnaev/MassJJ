@@ -13,6 +13,7 @@ import 'core/transport/delivery_transport.dart';
 import 'core/transport/nearby_runtime.dart';
 import 'core/transport/relay_transport.dart';
 import 'core/transport/transport_router.dart';
+import 'core/update/update_coordinator.dart';
 
 class AppController extends ChangeNotifier {
   AppController({
@@ -21,13 +22,17 @@ class AppController extends ChangeNotifier {
     required CryptoEngine cryptoEngine,
     required TransportRouter transportRouter,
     required String relayUrl,
+    UpdateCoordinator? updateCoordinator,
     bool enableNearby = true,
   }) : _identityService = identityService,
        _messageRepository = messageRepository,
        _cryptoEngine = cryptoEngine,
        _transportRouter = transportRouter,
        _relayUrl = relayUrl,
-       _enableNearby = enableNearby;
+       _enableNearby = enableNearby {
+    updates = updateCoordinator ?? UpdateCoordinator.disabled();
+    updates.addListener(_onUpdateChanged);
+  }
 
   final IdentityService _identityService;
   final MessageRepository _messageRepository;
@@ -35,6 +40,7 @@ class AppController extends ChangeNotifier {
   final TransportRouter _transportRouter;
   final String _relayUrl;
   final bool _enableNearby;
+  late final UpdateCoordinator updates;
   final Uuid _uuid = const Uuid();
 
   late AnonymousIdentity identity;
@@ -102,6 +108,7 @@ class AppController extends ChangeNotifier {
     }
     initialized = true;
     notifyListeners();
+    unawaited(updates.check());
   }
 
   Contact? _findContact(String userId) {
@@ -115,6 +122,10 @@ class AppController extends ChangeNotifier {
     if (_disposed) return;
     notifyListeners();
     unawaited(_syncTransports());
+  }
+
+  void _onUpdateChanged() {
+    if (!_disposed) notifyListeners();
   }
 
   Future<void> synchronize() => _syncTransports();
@@ -220,6 +231,8 @@ class AppController extends ChangeNotifier {
   void dispose() {
     _disposed = true;
     _pollTimer?.cancel();
+    updates.removeListener(_onUpdateChanged);
+    updates.dispose();
     unawaited(_nearbyRuntime?.close());
     _relayTransport?.close(force: true);
     super.dispose();

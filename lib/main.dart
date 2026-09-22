@@ -8,6 +8,7 @@ import 'src/core/identity/identity_service.dart';
 import 'src/core/messaging/message_repository.dart';
 import 'src/core/transport/local_outbox_transport.dart';
 import 'src/core/transport/transport_router.dart';
+import 'src/core/update/update_coordinator.dart';
 import 'src/data/local_vault.dart';
 
 Future<void> main() async {
@@ -35,6 +36,7 @@ Future<void> main() async {
           cryptoEngine: MvpCryptoEngine(),
           transportRouter: TransportRouter([LocalOutboxTransport(messages)]),
           relayUrl: const String.fromEnvironment('RELAY_URL'),
+          updateCoordinator: UpdateCoordinator(),
         );
         await controller.initialize();
         return controller;

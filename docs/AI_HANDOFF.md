@@ -5,7 +5,7 @@ This document is the continuity source for any AI or human continuing MassJJ.
 
 ## Current snapshot
 
-- Last updated: 2026-09-21
+- Last updated: 2026-09-22
 - Product: MassJJ
 - Stage: experimental Android MVP / pre-alpha public source
 - Version: `0.1.0+1`
@@ -27,9 +27,12 @@ This document is the continuity source for any AI or human continuing MassJJ.
 - bounded nearby HTTP inbox with authenticated decryption before persistence;
 - Android network policy permits cleartext LAN HTTP for dynamic peer IPs while
   message envelopes remain encrypted and authenticated end to end;
+- GitHub Releases update check, SHA-256 verified APK download, and Android
+  system-installer handoff with an in-app update banner;
 - Node.js opaque relay with split read/write mailbox capabilities;
-- light Android UI with chats, contacts, conversation, invite, and profile screens;
-- 24 Flutter tests, golden screenshots, relay tests, and relay end-to-end coverage.
+- light Android UI with chats, contacts, conversation, invite, profile, and
+  update-banner states;
+- 27 Flutter tests, golden screenshots, relay tests, and relay end-to-end coverage.
 
 ## Important paths
 
@@ -39,6 +42,8 @@ This document is the continuity source for any AI or human continuing MassJJ.
 - `lib/src/core/transport/` — relay, nearby, outbox, and routing;
 - `lib/src/data/local_vault.dart` — encrypted local persistence;
 - `server/relay.mjs` — development relay;
+- `lib/src/core/update/` — GitHub release validation, download, and installer coordination;
+- `docs/RELEASING.md` — signing and data-preserving release contract;
 - `docs/SECURITY_MODEL.md` — explicit security guarantees and non-guarantees;
 - `test/goldens/` — approved Android UI snapshots.
 
@@ -66,6 +71,15 @@ Latest verified results before repository publication:
 - Android APK: built successfully, 65.8 MB;
 - connected physical Android devices: none.
 
+Latest verification after update support was added on 2026-09-22:
+
+- Flutter analyze: no issues;
+- Flutter tests: 27 passed;
+- Android APK: built successfully, 65.9 MB;
+- merged release manifest contains the update permission, private FileProvider,
+  and LAN network-security configuration;
+- physical Android update installation: not yet tested.
+
 ## Security posture
 
 The current protocol and relay are not production-ready. A standard static audit
@@ -83,7 +97,8 @@ and one low. The main open areas are:
 Additional release blockers:
 
 - static identity keys provide no forward secrecy or post-compromise security;
-- Android release currently uses the debug signing configuration;
+- Android release falls back to debug signing until a private
+  `android/key.properties` and stable release keystore are supplied;
 - no independent protocol audit has been performed;
 - no official relay deployment exists.
 
@@ -103,7 +118,8 @@ Do not hide these limitations in public messaging. See `SECURITY.md` and
 4. Redesign mailbox provisioning and per-contact write capabilities.
 5. Add relay quotas/rate limits and transactional persistence.
 6. Test the alpha on two physical Android devices over LAN and relay paths.
-7. Create a production signing-key process only when binary distribution begins.
+7. Create, back up, and test the stable production signing key before the first
+   GitHub binary release.
 
 ## Change log
 
@@ -111,3 +127,4 @@ Do not hide these limitations in public messaging. See `SECURITY.md` and
 | --- | --- | --- |
 | 2026-09-21 | Prepared public repository metadata, AGPL licensing, contributor/security guidance, author support addresses, and mandatory AI continuity rules. | Secret screening and standard static security audit completed; existing Flutter/relay test results recorded above. |
 | 2026-09-21 | Enabled Android cleartext access required by the encrypted LAN transport and surfaced nearby startup failure in the transport banner. | `flutter analyze` clean; 24 Flutter tests passed; release APK built successfully (65.9 MB). |
+| 2026-09-22 | Added GitHub Releases update discovery, strict APK metadata/digest checks, Android installer handoff, update banner, release signing configuration, and release runbook. | `flutter analyze` clean; 27 Flutter tests passed; release APK built successfully (65.9 MB); merged manifest verified. |

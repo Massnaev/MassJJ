@@ -69,7 +69,7 @@ class _HomeShellState extends State<HomeShell> {
 
             if (!wide) {
               return Scaffold(
-                body: SafeArea(child: body),
+                body: SafeArea(child: _withUpdateBanner(body)),
                 bottomNavigationBar: SafeArea(
                   top: false,
                   child: NavigationBar(
@@ -105,7 +105,7 @@ class _HomeShellState extends State<HomeShell> {
                       },
                     ),
                     const VerticalDivider(width: 1),
-                    Expanded(child: body),
+                    Expanded(child: _withUpdateBanner(body)),
                   ],
                 ),
               ),
@@ -114,6 +114,33 @@ class _HomeShellState extends State<HomeShell> {
         );
       },
     );
+  }
+
+  Widget _withUpdateBanner(Widget body) {
+    final updates = widget.controller.updates;
+    if (updates.available == null) return body;
+    return Column(
+      children: [
+        _UpdateBanner(
+          version: updates.available!.version,
+          busy: updates.installing,
+          progress: updates.progress,
+          onTap: _installUpdate,
+        ),
+        Expanded(child: body),
+      ],
+    );
+  }
+
+  Future<void> _installUpdate() async {
+    await widget.controller.updates.installAvailable();
+    if (!mounted) return;
+    final message = widget.controller.updates.userMessage;
+    if (message != null) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(message)));
+    }
   }
 
   void _openChat(Contact contact) {
@@ -136,6 +163,72 @@ class _HomeShellState extends State<HomeShell> {
     );
     if (!mounted || contact == null) return;
     _openChat(contact);
+  }
+}
+
+class _UpdateBanner extends StatelessWidget {
+  const _UpdateBanner({
+    required this.version,
+    required this.busy,
+    required this.progress,
+    required this.onTap,
+  });
+
+  final String version;
+  final bool busy;
+  final double progress;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: const Color(0xFFEAF7FD),
+      child: InkWell(
+        onTap: busy ? null : onTap,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 9, 12, 9),
+          child: Row(
+            children: [
+              const Icon(
+                Icons.system_update_alt_rounded,
+                color: AppColors.accent,
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      busy
+                          ? 'Скачиваем обновление'
+                          : 'Доступен MassJJ $version',
+                      style: const TextStyle(fontWeight: FontWeight.w700),
+                    ),
+                    if (busy)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 5),
+                        child: LinearProgressIndicator(
+                          value: progress == 0 ? null : progress,
+                        ),
+                      )
+                    else
+                      Text(
+                        'Нажмите, чтобы скачать и установить',
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                  ],
+                ),
+              ),
+              if (!busy)
+                const Icon(
+                  Icons.chevron_right_rounded,
+                  color: AppColors.accent,
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }
 
