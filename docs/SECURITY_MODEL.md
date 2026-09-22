@@ -38,6 +38,15 @@ recipient routing identifiers, and approximate packet sizes. Nearby peers can
 observe physical proximity. Padding, opaque mailbox capabilities, relay rotation,
 and optional relay-only mode belong to later threat-model work.
 
+Relay mailbox registration proves possession of the X25519 private identity key
+through a server-specific key agreement and HMAC. The server persists only the
+identity public key, capability hashes, metadata, and encrypted packets. Global,
+mailbox, writer, body-size, message-count, rate, and TTL limits bound storage;
+new writes are rejected when full instead of evicting older messages. The
+current invitation still shares one long-lived write capability with every
+contact, so one holder can fill (but cannot silently evict) that mailbox's
+quota. Per-contact revocable capabilities remain a public-deployment blocker.
+
 LAN discovery uses directed, per-contact tags that rotate once per minute and
 accept a one-bucket clock skew. Advertisements contain a random service name,
 protocol version, port, and at most 64 tags, but no account ID or display name.

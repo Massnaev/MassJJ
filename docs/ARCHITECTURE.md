@@ -63,5 +63,10 @@ when the explicit `ALLOW_INSECURE_RELAY` development flag is compiled in.
 
 Changing the relay closes the previous client, replaces the router adapter,
 registers the local mailbox, and immediately retries the encrypted outbox. Relay
-responses are bounded and time-limited before JSON decoding. No public relay is
-bundled with the app; the current Node server remains development-only.
+responses are bounded and time-limited before JSON decoding. Registration uses
+an X25519 proof that binds the mailbox ID to the existing private identity key;
+the private key never leaves the client. The Node relay persists committed
+mailboxes and opaque packets in SQLite/WAL and enforces TTL, strict packet
+schemas, rate limits, and byte/count quotas. No public relay is bundled with the
+app, and remaining capability/operational blockers still prohibit a broad
+public deployment.

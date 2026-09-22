@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:cryptography/cryptography.dart';
+
 import '../identity/anonymous_identity.dart';
 import '../messaging/chat_message.dart';
 import '../messaging/encrypted_packet.dart';
@@ -41,14 +43,11 @@ class RelayTransport implements DeliveryTransport {
 
   Future<void> registerMailbox() async {
     try {
+      final registration = await _registrationBody();
       final response = await _jsonRequest(
         method: 'POST',
         path: '/v1/mailboxes',
-        body: {
-          'mailboxId': _identity.userId,
-          'readToken': _identity.inboxReadToken,
-          'writeToken': _identity.inboxWriteToken,
-        },
+        body: registration,
       );
       if (response.statusCode != 200 && response.statusCode != 201) {
         throw HttpException(
@@ -60,6 +59,62 @@ class RelayTransport implements DeliveryTransport {
       _state = TransportState.degraded;
       rethrow;
     }
+  }
+
+  Future<Map<String, Object?>> _registrationBody() async {
+    final configResponse = await _jsonRequest(
+      method: 'GET',
+      path: '/v1/config',
+    );
+    if (configResponse.statusCode != 200) {
+      throw HttpException(
+        'Relay configuration failed: ${configResponse.statusCode}',
+      );
+    }
+    final config = jsonDecode(configResponse.body);
+    if (config is! Map || config['v'] != 1) {
+      throw const FormatException('Unsupported relay configuration.');
+    }
+    final encodedServerKey = config['registrationPublicKey'];
+    if (encodedServerKey is! String) {
+      throw const FormatException('Relay registration key is missing.');
+    }
+    final serverKeyBytes = _decodeBase64Url(encodedServerKey);
+    if (serverKeyBytes.length != 32) {
+      throw const FormatException('Relay registration key is invalid.');
+    }
+
+    final publicKey = base64UrlEncode(_identity.publicKey).replaceAll('=', '');
+    final x25519 = X25519();
+    final keyPair = await x25519.newKeyPairFromSeed(_identity.privateSeed);
+    final sharedSecret = await x25519.sharedSecretKey(
+      keyPair: keyPair,
+      remotePublicKey: SimplePublicKey(
+        serverKeyBytes,
+        type: KeyPairType.x25519,
+      ),
+    );
+    final proofKey = await Hkdf(hmac: Hmac.sha256(), outputLength: 32)
+        .deriveKey(
+          secretKey: sharedSecret,
+          info: utf8.encode(_registrationContext),
+        );
+    final message = utf8.encode(
+      '$_registrationContext\n${_identity.userId}\n$publicKey\n'
+      '${_identity.inboxReadToken}\n${_identity.inboxWriteToken}',
+    );
+    final proof = await Hmac.sha256().calculateMac(
+      message,
+      secretKey: proofKey,
+    );
+    return {
+      'v': 1,
+      'mailboxId': _identity.userId,
+      'publicKey': publicKey,
+      'readToken': _identity.inboxReadToken,
+      'writeToken': _identity.inboxWriteToken,
+      'proof': base64UrlEncode(proof.bytes).replaceAll('=', ''),
+    };
   }
 
   @override
@@ -178,6 +233,19 @@ class RelayTransport implements DeliveryTransport {
         throw const FormatException('Relay response is too large.');
       }
       bytes.addAll(chunk);
+    }
+    return bytes;
+  }
+
+  static const _registrationContext = 'massjj-relay-registration-v1';
+
+  static List<int> _decodeBase64Url(String value) {
+    if (!RegExp(r'^[A-Za-z0-9_-]+$').hasMatch(value)) {
+      throw const FormatException('Invalid base64url value.');
+    }
+    final bytes = base64Url.decode(base64Url.normalize(value));
+    if (base64UrlEncode(bytes).replaceAll('=', '') != value) {
+      throw const FormatException('Non-canonical base64url value.');
     }
     return bytes;
   }

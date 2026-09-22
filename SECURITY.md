@@ -6,9 +6,11 @@ MassJJ `0.1.x` is an experimental MVP and is not supported for sensitive or
 production communication. There is currently no production-secure release.
 
 The MVP intentionally lacks an audited ratcheting protocol, forward secrecy,
-post-compromise security, production relay abuse controls, and production APK
-signing. The development relay must remain private/loopback-only until its
-provisioning, quotas, rate limits, TLS, and persistence model are redesigned.
+post-compromise security, complete production relay abuse controls, and
+production APK signing. The relay now has ownership proof, quotas, rate limits,
+TTL cleanup, and transactional SQLite persistence, but must remain behind an
+HTTPS proxy and out of broad public use until per-contact write capabilities,
+revocation, monitoring, and backup recovery are completed and tested.
 
 ## Reporting a vulnerability
 
@@ -30,7 +32,8 @@ messages, signing keys, or third-party personal data in a report.
 The current source documentation already treats these as shipping blockers:
 
 - static-key MVP cryptography without Double Ratchet;
-- incomplete relay admission, ownership, quota, and abuse controls;
+- shared non-revocable relay write capabilities and incomplete operational
+  monitoring/backup validation;
 - incomplete hostile-input/resource limits;
 - debug Android signing configuration;
 - recovery export through the system clipboard;

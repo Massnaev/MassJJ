@@ -1,0 +1,15 @@
+# Replace relay.example.com with the dedicated MassJJ relay hostname.
+relay.example.com {
+	encode zstd gzip
+
+	reverse_proxy 127.0.0.1:8787 {
+		header_up X-Forwarded-For {remote_host}
+		header_up X-Forwarded-Proto {scheme}
+	}
+
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		-Server
+	}
+}

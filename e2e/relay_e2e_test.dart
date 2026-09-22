@@ -28,7 +28,9 @@ void main() {
       environment: {
         'HOST': '127.0.0.1',
         'PORT': '0',
-        'RELAY_STORAGE': '${relayData.path}${Platform.pathSeparator}relay.json',
+        'RELAY_STORAGE':
+            '${relayData.path}${Platform.pathSeparator}relay.sqlite',
+        'NODE_OPTIONS': '--disable-warning=ExperimentalWarning',
       },
     );
     relayProcess.stderr

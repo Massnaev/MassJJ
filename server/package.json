@@ -4,10 +4,10 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
-    "start": "node relay.mjs",
-    "test": "node --test test/*.test.mjs"
+    "start": "node --disable-warning=ExperimentalWarning relay.mjs",
+    "test": "node --disable-warning=ExperimentalWarning --test test/*.test.mjs"
   },
   "engines": {
-    "node": ">=22"
+    "node": ">=22.13"
   }
 }
