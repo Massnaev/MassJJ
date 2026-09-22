@@ -109,6 +109,8 @@ UI -> AppController -> CryptoEngine -> EncryptedPacket -> TransportRouter
 
 - [архитектура](docs/ARCHITECTURE.md);
 - [локальный Wi-Fi/LAN-транспорт](docs/NEARBY_WIFI.md);
+- [обязательный план офлайн-доставки через промежуточные устройства](docs/DTN_ROADMAP.md);
+- [минимальный план развёртывания Internet relay](docs/RELAY_DEPLOYMENT.md);
 - [модель безопасности MVP](docs/SECURITY_MODEL.md);
 - [план миграции на Double Ratchet](docs/RATCHET_MIGRATION.md);
 - [контекст для AI-разработчиков](docs/AI_HANDOFF.md).
@@ -120,7 +122,8 @@ UI -> AppController -> CryptoEngine -> EncryptedPacket -> TransportRouter
 - добавить подписываемые Android alpha-сборки;
 - протестировать обмен на двух физических Android-устройствах;
 - добавить отправку файлов и уведомления;
-- реализовать Bluetooth/Wi-Fi Direct и DTN-передачу через промежуточные устройства;
+- реализовать обязательную Bluetooth/Wi-Fi Direct и DTN-доставку вида
+  `A -> B -> C -> D` через промежуточные устройства;
 - вернуться к Windows и iOS после стабилизации Android.
 
 ## Участие в разработке

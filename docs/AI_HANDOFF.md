@@ -46,6 +46,8 @@ This document is the continuity source for any AI or human continuing MassJJ.
 - `lib/src/data/local_vault.dart` — encrypted local persistence;
 - `lib/src/data/app_settings_repository.dart` — persisted relay origin;
 - `server/relay.mjs` — development relay;
+- `docs/DTN_ROADMAP.md` — mandatory store-carry-forward offline delivery plan;
+- `docs/RELAY_DEPLOYMENT.md` — minimum Internet relay deployment and budget plan;
 - `lib/src/core/update/` — GitHub release validation, download, and installer coordination;
 - `docs/RELEASING.md` — signing and data-preserving release contract;
 - `docs/SECURITY_MODEL.md` — explicit security guarantees and non-guarantees;
@@ -134,6 +136,9 @@ Do not hide these limitations in public messaging. See `SECURITY.md` and
 5. Test the alpha on two physical Android devices over LAN and relay paths.
 6. Create, back up, and test the stable production signing key before the first
    GitHub binary release.
+7. Implement the mandatory opportunistic offline route described in
+   `docs/DTN_ROADMAP.md`, progressing from BLE discovery to physically tested
+   multi-hop `A -> B -> C -> D` delivery.
 
 ## Change log
 
@@ -144,3 +149,4 @@ Do not hide these limitations in public messaging. See `SECURITY.md` and
 | 2026-09-22 | Added GitHub Releases update discovery, strict APK metadata/digest checks, Android installer handoff, update banner, release signing configuration, and release runbook. | `flutter analyze` clean; 27 Flutter tests passed; release APK built successfully (65.9 MB); merged manifest verified. |
 | 2026-09-22 | Added persistent in-app HTTPS relay configuration, immediate reconnect/outbox retry, redirect rejection, bounded relay responses, and a profile settings row. | `flutter analyze` clean; 30 Flutter tests, 3 relay tests, and 2 relay E2E tests passed; release APK built successfully (66.3 MB). |
 | 2026-09-22 | Added rate-limited GitHub update checks on app resume and a three-hour periodic check while active. | `flutter analyze` clean; 30 Flutter tests passed. |
+| 2026-09-22 | Recorded mandatory multi-hop offline DTN delivery and the minimum hardened Internet relay deployment/budget plan. | Documentation-only change; `git diff --check` clean; runtime tests not repeated. |
